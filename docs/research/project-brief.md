@@ -9,6 +9,7 @@ Status: awaiting the user's prior research document. Last updated: 2026-10-06.
 - Working repository: Syedsaadhhh/FireShield.
 - The user has a researched idea with multiple possible prototypes; it is not finalized.
 - The evaluation must include reverse checking and business viability.
+- User clarification on 2026-10-06: the imported repositories are research aids for evaluating the forthcoming document and improving the idea research. The current task is research evaluation.
 - The repo name does not establish a use case.
 
 ## Research intake

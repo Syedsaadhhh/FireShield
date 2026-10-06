@@ -55,6 +55,58 @@ The exact repository returned GitHub 404. Public repository searches and web sea
 
 Verdict: unavailable for assessment. Do not fork or base the project on an unverified identity. Revisit if a working URL is supplied.
 
+## 3. saas-starter/saas-validation
+
+Requested URL: https://github.com/saas-starter/saas-validation
+
+Checked again on 2026-10-06 after the user's follow-up recommendation. The exact GitHub metadata request returned 404; repository-scoped search also reported the resource unavailable/nonexistent or inaccessible.
+
+No source was available to substantiate the claimed evidence gates, pain-mining, or skeptic track. The name alone does not establish an identical replacement.
+
+Verdict: do not adopt an unverified repository.
+
+## 4. MaxKmet/idea-validation-agents
+
+Repository: https://github.com/MaxKmet/idea-validation-agents
+
+Reviewed source commit: 3a4c800a3022e73e9997533b603c79b60ee7597a. GitHub reported a public, MIT-licensed repository with 473 stars at review time. License content and the reviewed source tree were inspected directly.
+
+### What is present
+
+- Fifteen canonical skill documents for competition, pricing, distribution, acquisition economics, retention, markets, scoring, and decision-making.
+- Four workflow templates and prompt templates for trend research.
+- Assistant adapters for Claude Code, Codex, and Cursor.
+- Structured output conventions, risk experiments, and decision memo templates.
+
+This is a workflow/prompt repository for existing AI tools. Its templates do not themselves supply a standalone service, verified customer data, a running research job, or a Fire TV app.
+
+### Reverse-check findings
+
+- There is no hypothesis.yaml, evidence/verified_pains.jsonl, or G1-G6 gate implementation in the reviewed tree. The claim of identical logic to unavailable kfros files cannot be verified.
+- The focus is indie B2C/mobile apps; several research methods need adaptation for TV households, Amazon Appstore, and device-specific constraints.
+- The pricing template estimates price-sensitivity thresholds from competitor prices; it does not include observed customer survey responses.
+- Numerical heuristics and generic benchmarks need evidence or scenario labels.
+- The scoring document lists six weights while its confidence/missing-input guidance refers to seven dimensions.
+- Several canonical rubrics are incomplete/TODO.
+- The validation chain references user_extraction.json and weighted_signals.json without specifying their generation inside that chain.
+- Assertions that judges love it or that it is an identical replacement are not substantiated by the inspected code.
+
+### Verdict and import
+
+Worth using as a research-template reference with these limitations documented. FireShield now contains 30 unmodified, MIT-attributed source documents, a pinned provenance manifest, and an original Fire TV adaptation guide. Root upstream assistant instructions/configuration have not been installed.
+
+See [Fire TV adaptation](../validation/fire-tv-workflow.md), [third-party references](../../third_party/idea-validation-agents/README.md), and [license notice](../../THIRD_PARTY_NOTICES.md).
+
+## Interpreting the earlier 404
+
+The earlier error was GitHub API 404 on repository metadata lookup. No fork action was attempted. A 404 by itself cannot identify missing OAuth repo scope: unavailable/private resources, access, or URL issues can yield that response. GitHub App permissions and OAuth scopes also have different authentication models.
+
+Official explanation: https://docs.github.com/en/rest/using-the-rest-api/troubleshooting-the-rest-api
+
+The connection successfully committed and verified FireShield files, so the unavailable third-party URLs do not establish a general inability to write to the user's repositories.
+
+An AI-generated reconstruction offered without the original source, commit, and license should be labeled a new template. It cannot be treated as recovered exact kfros files.
+
 ## Application-foundation candidate
 
 AmazonAppDev/react-native-multi-tv-app-sample is linked by the organizers as a Fire TV starter:
@@ -68,5 +120,5 @@ It is a candidate for application development after reviewing the user's researc
 ## Actions taken
 
 - No third-party repositories were forked.
-- No third-party source code was copied.
+- MIT-licensed MaxKmet research templates were imported with attribution and source hashes; no material from the unavailable or rights-reserved research repositories was copied.
 - FireShield was initialized with original project planning documents.

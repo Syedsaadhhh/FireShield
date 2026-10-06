@@ -1,0 +1,130 @@
+{
+  "repository": "https://github.com/MaxKmet/idea-validation-agents",
+  "commit": "3a4c800a3022e73e9997533b603c79b60ee7597a",
+  "license": "MIT",
+  "imported_on": "2026-10-06",
+  "purpose": "Unmodified canonical research and validation templates for reference. Not an installed agent or background service.",
+  "included_files": [
+    {
+      "path": "LICENSE",
+      "git_blob_sha": "ac24775de0aed751271a16175e39e149bfdf4269"
+    },
+    {
+      "path": "memory/README.md",
+      "git_blob_sha": "88b77096562d9272827824e73274ec7ac6b43176"
+    },
+    {
+      "path": "memory/extra-context/core-human-desires.md",
+      "git_blob_sha": "c3fee1372368436fdd0b0f7597d6055086c860bd"
+    },
+    {
+      "path": "memory/market_insights/README.md",
+      "git_blob_sha": "59e8334dbe7f475b02a0548e829afbbcf4ef3800"
+    },
+    {
+      "path": "skills/README.md",
+      "git_blob_sha": "416cf27aa2aaa732d266ef3c913b151d5ff1756c"
+    },
+    {
+      "path": "skills/cac-modeler/SKILL.md",
+      "git_blob_sha": "60c1357aead68c957af2df3b5e58c5e26fd4aba9"
+    },
+    {
+      "path": "skills/competitor-mapper/SKILL.md",
+      "git_blob_sha": "71c7552594d949e99b34430178398e632313d9a1"
+    },
+    {
+      "path": "skills/decision-memo/SKILL.md",
+      "git_blob_sha": "8055b94f5045a35b7348258261bdfb6f920976e3"
+    },
+    {
+      "path": "skills/desire-evaluator/SKILL.md",
+      "git_blob_sha": "96bc0bbd704bac06db5792543d53d19bd183905f"
+    },
+    {
+      "path": "skills/distribution-analysis/SKILL.md",
+      "git_blob_sha": "8b78d14b188c12911aa2d9886154771c7b30cb27"
+    },
+    {
+      "path": "skills/idea-scoring/SKILL.md",
+      "git_blob_sha": "38fbcdf15267f46f1a211881c5ab775083661258"
+    },
+    {
+      "path": "skills/pivot-engine/SKILL.md",
+      "git_blob_sha": "8cb1d755214f25f368dcef3a9a43700b3dde3855"
+    },
+    {
+      "path": "skills/pricing-and-wtp/SKILL.md",
+      "git_blob_sha": "b02e42b1ad3ad11cf1c0745feb478f477bb56728"
+    },
+    {
+      "path": "skills/retention-predictor/SKILL.md",
+      "git_blob_sha": "93149e9b60578c5f06eb805cfed5fb3e3c077eaf"
+    },
+    {
+      "path": "skills/tam-sam-som-builder/SKILL.md",
+      "git_blob_sha": "f5818a07c1fda600c7c99b618f43c4caca9fb31a"
+    },
+    {
+      "path": "skills/trend-analysis/SKILL.md",
+      "git_blob_sha": "c57131a4880d9645c547090a6cf65783f67de420"
+    },
+    {
+      "path": "skills/trend-analysis/prompts/apps.md",
+      "git_blob_sha": "62ccee24e988cee988aa43d5f4bfcbc26c47aabd"
+    },
+    {
+      "path": "skills/trend-analysis/prompts/reddit.md",
+      "git_blob_sha": "730fdca4438af5db89c29e5a18fd1831e18e9c3f"
+    },
+    {
+      "path": "skills/trend-analysis/prompts/tiktok.md",
+      "git_blob_sha": "07deae5f2447548f9988588ab3b054d319a14fb9"
+    },
+    {
+      "path": "skills/trend-analysis/prompts/web-search.md",
+      "git_blob_sha": "70b6498e52bc85fb2c15d6d854bd2102d610bef1"
+    },
+    {
+      "path": "skills/trend-analysis/prompts/x-twitter.md",
+      "git_blob_sha": "37f902c6e967c84a575baa6efa159aed92aea46a"
+    },
+    {
+      "path": "skills/trend-to-product-mapper/SKILL.md",
+      "git_blob_sha": "8221cb2bbc9ce436ab54747d73faf93b1dc4ffb7"
+    },
+    {
+      "path": "skills/user-background-interviewer/SKILL.md",
+      "git_blob_sha": "e1a15368dfde186c048a93957387d0b35d6b9bef"
+    },
+    {
+      "path": "skills/user-segmentation-profiler/SKILL.md",
+      "git_blob_sha": "e828246417de690545c25ed5efa749054283a197"
+    },
+    {
+      "path": "skills/weakness-detection/SKILL.md",
+      "git_blob_sha": "57412e7177112da202feb044d4090c900c718a46"
+    },
+    {
+      "path": "workflows/README.md",
+      "git_blob_sha": "a0c8111b87f28daa3b4aeafadd49b2cc1855fb44"
+    },
+    {
+      "path": "workflows/idea-generation.md",
+      "git_blob_sha": "93c5aa6bc07deace468d5f72b3e1b1c15844b3d8"
+    },
+    {
+      "path": "workflows/idea-validation.md",
+      "git_blob_sha": "775f38bcba5cabb8cb5ee54abd0f8515718c526f"
+    },
+    {
+      "path": "workflows/market-deep-dive.md",
+      "git_blob_sha": "5ac4a4e96164fd2ea9ecc4df88ea8de5fc29714a"
+    },
+    {
+      "path": "workflows/pivot-optimization.md",
+      "git_blob_sha": "876f57679bdb467b7bbcd23419c6647f6741e363"
+    }
+  ],
+  "excluded": "Upstream root agent instructions, assistant adapters/configuration, marketing README, images, and empty .gitkeep files."
+}

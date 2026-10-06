@@ -4,6 +4,8 @@
 
 This is the user's Amazon Build, Ship, Shape hackathon repository. Fire TV is the intended primary track. The user's prior research document has not yet been supplied in this repository, and the product direction and stack are not finalized.
 
+Current phase: use the imported reference templates to evaluate the user's forthcoming document and improve its idea research, evidence, business case, and feasibility analysis. Application or prototype implementation is outside this phase until the user requests it.
+
 ## Working rules
 
 - Respond and write project documentation in English.
