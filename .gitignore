@@ -1,0 +1,26 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# JavaScript and generated output
+node_modules/
+dist/
+build/
+coverage/
+
+# Android and local tooling
+.gradle/
+local.properties
+*.jks
+*.keystore
+.DS_Store
+Thumbs.db
