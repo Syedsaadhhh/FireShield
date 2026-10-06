@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-06",
+  "method": "Targeted public-source desk research and engineering/business analysis; no customer or runtime experiments.",
+  "source_document": {
+    "filename": "Synaptic_Shield_Hardened_Idea_File_2026-09-28.md",
+    "supplied_by": "founder",
+    "document_date": "2026-09-28",
+    "sha256": "beb30ed3de52b47a69f457b9c582819048942236f6fd2719bc1968d60a41b670",
+    "preserved_unmodified": true
+  },
+  "sources": [
+    {
+      "id": "S01",
+      "links": [
+        {
+          "title": "Epilepsy Foundation: Photosensitivity and seizures",
+          "url": "https://www.epilepsy.com/what-is-epilepsy/seizure-triggers/photosensitivity"
+        }
+      ],
+      "scope_and_limit": "Approximate 3% denominator is people with epilepsy; no buyer TAM",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S02",
+      "links": [
+        {
+          "title": "W3C: Understanding SC 2.3.1",
+          "url": "https://www.w3.org/WAI/WCAG22/Understanding/three-flashes-or-below-threshold"
+        }
+      ],
+      "scope_and_limit": "Flash criteria, viewing assumptions, full-screen/HDR guidance; no product validation",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S03",
+      "links": [
+        {
+          "title": "ITU BT.1702-3",
+          "url": "https://www.itu.int/rec/R-REC-BT.1702-3-202311-I/en"
+        }
+      ],
+      "scope_and_limit": "Landing page says in force; full implementation conformance not checked",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S04",
+      "links": [
+        {
+          "title": "EA IRIS",
+          "url": "https://github.com/electronicarts/IRIS"
+        },
+        {
+          "title": "licence",
+          "url": "https://github.com/electronicarts/IRIS/blob/main/LICENSE.txt"
+        }
+      ],
+      "scope_and_limit": "README screening/export scope and inspected licence; not built or benchmarked",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S05",
+      "links": [
+        {
+          "title": "Apple accessibility features",
+          "url": "https://www.apple.com/accessibility/features/"
+        }
+      ],
+      "scope_and_limit": "Dimming and supported timeline indication, including Apple TV 4K; no all-content guarantee",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S06",
+      "links": [
+        {
+          "title": "Apple HLS authoring appendixes",
+          "url": "https://developer.apple.com/documentation/http-live-streaming/hls-authoring-specification-for-apple-devices-appendixes"
+        }
+      ],
+      "scope_and_limit": "Official indexed text describes risk-region DATERANGE class and level; direct page is JS-only in this reader",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S07",
+      "links": [
+        {
+          "title": "Apple VideoFlashingReduction",
+          "url": "https://github.com/apple-aiml-research/VideoFlashingReduction"
+        }
+      ],
+      "scope_and_limit": "Reference implementations and MIT-labelled repository; not benchmarked here",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S08",
+      "links": [
+        {
+          "title": "Interra BATON",
+          "url": "https://www.interrasystems.com/file-based-qc.php"
+        }
+      ],
+      "scope_and_limit": "Vendor-described PSE/correction, ABR, workflow/API support",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S09",
+      "links": [
+        {
+          "title": "HardingFPA",
+          "url": "https://www.hardingfpa.com/"
+        }
+      ],
+      "scope_and_limit": "Vendor-described guideline analysis and detailed reports",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S10",
+      "links": [
+        {
+          "title": "Telestream Vidchecker options",
+          "url": "https://www.telestream.net/vidchecker/options.htm"
+        }
+      ],
+      "scope_and_limit": "Vendor-described optional luminance-flash correction; licence/configuration matter",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S11",
+      "links": [
+        {
+          "title": "FFmpeg filters: photosensitivity",
+          "url": "https://www.ffmpeg.org/ffmpeg-filters.html#photosensitivity"
+        }
+      ],
+      "scope_and_limit": "Existing filtering controls; not automatically conformance assessment",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S12",
+      "links": [
+        {
+          "title": "Vega WebGL guidance",
+          "url": "https://developer.amazon.com/docs/vega/0.21/webview-webgl-best-practices"
+        }
+      ],
+      "scope_and_limit": "WebGL 2.0 support and private video buffers; scope is this documented platform",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S13",
+      "links": [
+        {
+          "title": "AWS MediaConvert timecodes",
+          "url": "https://docs.aws.amazon.com/mediaconvert/latest/ug/setting-up-timecode.html"
+        }
+      ],
+      "scope_and_limit": "Distinct timelines/settings and frame-number timecodes",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S14",
+      "links": [
+        {
+          "title": "Vega media-player FAQ",
+          "url": "https://www.developer.amazon.com/docs/vega/0.24/media-player-faq"
+        }
+      ],
+      "scope_and_limit": "Documented play/pause/seek; no measured intervention guarantee",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S15",
+      "links": [
+        {
+          "title": "TikTok accessibility announcement, 24 Nov 2020",
+          "url": "https://newsroom.tiktok.com/making-tiktok-more-accessible-to-people-with-photosensitive-epilepsy?lang=en"
+        }
+      ],
+      "scope_and_limit": "Historical warning/avoidance precedent; current rollout not established",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S16",
+      "links": [
+        {
+          "title": "CineGuard: About",
+          "url": "https://cineguard.org/about"
+        }
+      ],
+      "scope_and_limit": "Moderated timecodes and disclosed cut/intro drift",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S17",
+      "links": [
+        {
+          "title": "Described README",
+          "url": "https://github.com/moiz-lakkadkutta/described"
+        }
+      ],
+      "scope_and_limit": "Author's Fire OS/audio-description and deferred Vega claims; not tested",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S18",
+      "links": [
+        {
+          "title": "Android Media3 VideoFrameMetadataListener",
+          "url": "https://developer.android.com/reference/androidx/media3/exoplayer/video/VideoFrameMetadataListener"
+        }
+      ],
+      "scope_and_limit": "Instrumentation with frame presentation/release metadata; not a suppression promise",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S19",
+      "links": [
+        {
+          "title": "Official hackathon rules",
+          "url": "https://amazonappdev2026.devpost.com/rules"
+        }
+      ],
+      "scope_and_limit": "Deadline, platform/repository/demo requirements and judging; recheck for changes",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S20",
+      "links": [
+        {
+          "title": "Official event gallery",
+          "url": "https://amazonappdev2026.devpost.com/project-gallery"
+        }
+      ],
+      "scope_and_limit": "Unpublished at access; no exhaustive current-event competitor inspection",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S21",
+      "links": [
+        {
+          "title": "AWS Video on Demand architecture",
+          "url": "https://docs.aws.amazon.com/solutions/latest/video-on-demand-on-aws/how-the-solution-works.html"
+        }
+      ],
+      "scope_and_limit": "Media-lifecycle infrastructure example; not this application",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S22",
+      "links": [
+        {
+          "title": "Uscreen TV-app overview",
+          "url": "https://help.uscreen.tv/en/articles/6708491-uscreen-mobile-tv-apps-overview"
+        }
+      ],
+      "scope_and_limit": "Platform-built branded apps including Fire TV; no integration permission verified",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S23",
+      "links": [
+        {
+          "title": "Vimeo OTT branded-app offering",
+          "url": "https://help.vimeo.com/hc/en-us/articles/12427344749073-Why-branded-apps-are-a-good-investment-for-Vimeo-OTT"
+        }
+      ],
+      "scope_and_limit": "Branded apps including Fire TV; no partner commitment or prospect census",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S24",
+      "links": [
+        {
+          "title": "TRACE pse-test-media",
+          "url": "https://github.com/traceRERC/pse-test-media"
+        }
+      ],
+      "scope_and_limit": "Configurable benchmark generator; hazard warning; no local execution",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S25",
+      "links": [
+        {
+          "title": "Jordan 2025 paper DOI",
+          "url": "https://doi.org/10.1007/978-3-031-93848-1_7"
+        },
+        {
+          "title": "PubMed",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/40656147/"
+        },
+        {
+          "title": "author version",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12249941/"
+        }
+      ],
+      "scope_and_limit": "Bibliographic record, indexed abstract and author repo inspected; full author-version page blocked by verification",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S26",
+      "links": [
+        {
+          "title": "Android Media3 SeekParameters",
+          "url": "https://developer.android.com/reference/androidx/media3/exoplayer/SeekParameters"
+        }
+      ],
+      "scope_and_limit": "Exact/sync-point seeking and internal decoding behavior",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S27",
+      "links": [
+        {
+          "title": "AWS S3 upload integrity",
+          "url": "https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity-upload.html"
+        }
+      ],
+      "scope_and_limit": "Checksums and ETag limitations; choose explicit integrity fields",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S28",
+      "links": [
+        {
+          "title": "RFC 8785: JSON Canonicalization Scheme",
+          "url": "https://www.rfc-editor.org/rfc/rfc8785"
+        }
+      ],
+      "scope_and_limit": "Existing canonicalization specification, not a full trust policy",
+      "accessed_at": "2026-10-06"
+    },
+    {
+      "id": "S29",
+      "links": [
+        {
+          "title": "RFC 8216: HTTP Live Streaming",
+          "url": "https://www.rfc-editor.org/rfc/rfc8216"
+        }
+      ],
+      "scope_and_limit": "Playlist/date-range/discontinuity semantics; client enforcement still separate",
+      "accessed_at": "2026-10-06"
+    }
+  ],
+  "repository_heads_recorded": {
+    "electronicarts/IRIS": "d96978ac1107f3463b77f69a9c1b1ec5d45291a0",
+    "moiz-lakkadkutta/described": "f7bc42a4350a4dd0adafa6a13773e7b92739fc72",
+    "traceRERC/pse-test-media": "ef78542aad496827f25064f57aaf13d6a741ba75"
+  },
+  "claims": [
+    {
+      "id": "E01",
+      "claim": "Visual triggers affect about 3% of people with epilepsy, not all viewers.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S01"
+      ],
+      "limitation_or_next_evidence": "Viewer category evidence; not product efficacy or TAM."
+    },
+    {
+      "id": "E02",
+      "claim": "Flashing-risk regions in HLS have an existing Apple metadata specification.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S06"
+      ],
+      "limitation_or_next_evidence": "Official indexed text; direct page JS-only."
+    },
+    {
+      "id": "E03",
+      "claim": "Apple describes flashing-light dimming and supported timeline indication.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S05"
+      ],
+      "limitation_or_next_evidence": "No guarantee across all content/devices."
+    },
+    {
+      "id": "E04",
+      "claim": "Apple publishes a reference flashing-reduction algorithm.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S07"
+      ],
+      "limitation_or_next_evidence": "Not executed or benchmarked."
+    },
+    {
+      "id": "E05",
+      "claim": "BATON describes PSE checks/correction, ABR QC and workflow APIs.",
+      "status": "VENDOR_CLAIM",
+      "source_ids": [
+        "S08"
+      ],
+      "limitation_or_next_evidence": "Not independently verified performance."
+    },
+    {
+      "id": "E06",
+      "claim": "Vidchecker describes optional luminance-flash correction.",
+      "status": "VENDOR_CLAIM",
+      "source_ids": [
+        "S10"
+      ],
+      "limitation_or_next_evidence": "Actual package/licence/configuration not evaluated."
+    },
+    {
+      "id": "E07",
+      "claim": "EA IRIS has reusable screening outputs and a permissive conditional licence.",
+      "status": "INSPECTED_REPOSITORY",
+      "source_ids": [
+        "S04"
+      ],
+      "limitation_or_next_evidence": "README and LICENSE.txt inspected; build/dependencies/accuracy untested."
+    },
+    {
+      "id": "E08",
+      "claim": "Vega WebGL supports 2.0 but does not permit video extraction from private buffers as textures.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S12"
+      ],
+      "limitation_or_next_evidence": "Platform-specific documentation; not a global absence of WebGL."
+    },
+    {
+      "id": "E09",
+      "claim": "Vega exposes play/pause and position-based seeking.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S14"
+      ],
+      "limitation_or_next_evidence": "Does not prove pre-render intervention."
+    },
+    {
+      "id": "E10",
+      "claim": "MediaConvert has distinct timelines and frame-number timecodes.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S13"
+      ],
+      "limitation_or_next_evidence": "Explicit conversion to player presentation time is proposed."
+    },
+    {
+      "id": "E11",
+      "claim": "Frame metadata and seek options can support Android instrumentation.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S18",
+        "S26"
+      ],
+      "limitation_or_next_evidence": "Fire TV behavior and suppression mechanism remain untested."
+    },
+    {
+      "id": "E12",
+      "claim": "CineGuard discloses drift across versions/intros.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S16"
+      ],
+      "limitation_or_next_evidence": "Supports a possible alignment issue, not publisher purchasing demand."
+    },
+    {
+      "id": "E13",
+      "claim": "Described README separates Fire OS shipping claims from a deferred Vega template.",
+      "status": "INSPECTED_REPOSITORY",
+      "source_ids": [
+        "S17"
+      ],
+      "limitation_or_next_evidence": "Self-report; no independent execution."
+    },
+    {
+      "id": "E14",
+      "claim": "Branded-app suppliers offer Fire TV apps.",
+      "status": "VENDOR_CLAIM",
+      "source_ids": [
+        "S22",
+        "S23"
+      ],
+      "limitation_or_next_evidence": "Inference: prospect integration authority must be checked."
+    },
+    {
+      "id": "E15",
+      "claim": "The current official event gallery was unpublished at access.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S20"
+      ],
+      "limitation_or_next_evidence": "Current-entry competitor coverage is incomplete."
+    },
+    {
+      "id": "E16",
+      "claim": "Hackathon deadline is 2026-10-23 12:00 PDT and a functioning Fire OS/Vega demo is required.",
+      "status": "DOCUMENTED",
+      "source_ids": [
+        "S19"
+      ],
+      "limitation_or_next_evidence": "Rules can change; recheck before submission."
+    },
+    {
+      "id": "E17",
+      "claim": "Exact output screening and release-bound enforcement improve the customer workflow.",
+      "status": "HYPOTHESIS",
+      "source_ids": [],
+      "limitation_or_next_evidence": "Requires comparison to corrected content and existing QA exports."
+    },
+    {
+      "id": "E18",
+      "claim": "Publishers will pay for this integration.",
+      "status": "UNVALIDATED",
+      "source_ids": [],
+      "limitation_or_next_evidence": "No interviews, named budget, written funded scope or payment."
+    },
+    {
+      "id": "E19",
+      "claim": "The selected player can avoid presenting the marked interval.",
+      "status": "UNVALIDATED",
+      "source_ids": [],
+      "limitation_or_next_evidence": "No target selected by experiment, no displayed-output measurement."
+    },
+    {
+      "id": "E20",
+      "claim": "The product improves viewer comfort or task completion.",
+      "status": "UNVALIDATED",
+      "source_ids": [],
+      "limitation_or_next_evidence": "No user study or clinical evidence."
+    },
+    {
+      "id": "E21",
+      "claim": "A reviewed/signature-verified file establishes seizure prevention.",
+      "status": "REJECTED_INFERENCE",
+      "source_ids": [],
+      "limitation_or_next_evidence": "Authenticity, screening, rendering and clinical effect are separate."
+    },
+    {
+      "id": "E22",
+      "claim": "Release gate plus controlled player is the candidate to test.",
+      "status": "REVIEW_RECOMMENDATION",
+      "source_ids": [],
+      "limitation_or_next_evidence": "Not a measured winner or calibrated score."
+    },
+    {
+      "id": "E23",
+      "claim": "Cost and price scenario in the report demonstrates observed ROI.",
+      "status": "REJECTED_INFERENCE",
+      "source_ids": [],
+      "limitation_or_next_evidence": "All scenario inputs are invented and explicitly labelled."
+    },
+    {
+      "id": "E24",
+      "claim": "FireShield currently has a runnable application.",
+      "status": "NOT_ESTABLISHED",
+      "source_ids": [],
+      "limitation_or_next_evidence": "Repository is documentation only at review time."
+    }
+  ],
+  "gates": {
+    "G1": "CONDITIONAL",
+    "G2": "CONDITIONAL",
+    "G3": "CONDITIONAL",
+    "G4": "UNASSESSED",
+    "G5": "UNASSESSED",
+    "G6": "FAIL_AT_REVIEW_TIME"
+  },
+  "unperformed": [
+    "buyer interviews",
+    "outreach",
+    "app implementation",
+    "detector benchmarks",
+    "device tests",
+    "usability study",
+    "paid pilot",
+    "clinical evaluation",
+    "deployment",
+    "background automation"
+  ]
+}

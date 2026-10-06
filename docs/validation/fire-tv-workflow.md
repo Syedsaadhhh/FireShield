@@ -1,6 +1,6 @@
 # Applying the validation toolkit to FireShield
 
-Status: toolkit imported; product research and customer validation have not yet been performed. The current assignment is to evaluate the user's forthcoming research document and strengthen the idea research. The later feasibility/prototype steps below are proposed validation actions to recommend, rather than an instruction to build the app during this review.
+Status: toolkit imported and desk-research evaluation completed on 6 October 2026. The founder's Synaptic Shield source is preserved; customer and device validation remain unperformed. Read the [pressure-test report](../research/Synaptic_Shield_VC_Pressure_Test_2026-10-06.md) and [decision memo](synaptic-shield-decision-memo.md). Feasibility/prototype steps below are proposed validation actions, not work performed during the review.
 
 ## What was adopted
 
@@ -8,7 +8,7 @@ The MIT-licensed MaxKmet research templates supply useful structures for competi
 
 [Imported references](../../third_party/idea-validation-agents/README.md) are pinned to commit 3a4c800a3022e73e9997533b603c79b60ee7597a. This is an attributed import into FireShield, not a new GitHub fork or an installed assistant plugin.
 
-Use the templates selectively after the user's researched concept arrives. Do not restart a broad idea-generation interview when the supplied research already answers the relevant questions.
+Use the templates selectively with the supplied researched concept. Do not restart a broad idea-generation interview when the supplied research already answers the relevant questions.
 
 ## Known limitations to account for
 
@@ -53,13 +53,27 @@ The following gates are original FireShield planning guidance. They are not reco
 | G6: Delivery | Can users and judges reproduce the working experience? | Runnable repository, required platform demo, instructions, and submission materials |
 
 Gate states:
-- **UNASSESSED**: required evidence has not been collected. This is the current state of every gate.
+- **UNASSESSED**: required evidence has not been collected. See the current gate assessment below.
 - **PASS**: the predeclared criterion is met by documented observations.
 - **CONDITIONAL**: limited support exists; name the missing evidence and a concrete follow-up experiment.
 - **FAIL**: evidence contradicts the criterion; document the consequence and revise or stop the relevant assumption.
 
 Choose thresholds to fit the actual user task before testing. Do not insert generic numeric cutoffs, manufacture pain records, or treat unknown data as proof of failure or success.
 
+## Gate assessment after the 6 October review
+
+| Gate | Current state | Main remaining evidence |
+| --- | --- | --- |
+| G1 Problem | CONDITIONAL | Recurring publisher workflow and observed viewer task |
+| G2 Gap | CONDITIONAL | Task advantage over Apple markers, existing QA correction and status quo |
+| G3 Device feasibility | CONDITIONAL | Target-device presented-frame and failure measurements |
+| G4 User value | UNASSESSED | Operator/viewer task comparison |
+| G5 Business | UNASSESSED | Budget, funded pilot, integration authority and costs |
+| G6 Delivery | FAIL at review time | Runnable Fire TV app and reproducible platform demo |
+
+These are evidence states, not calibrated startup scores or medical validation. The leading test candidate is the publisher release/review integration plus controlled player. No application has been built in this phase.
+
 ## Research outcome
 
 Use [decision-memo-template.md](decision-memo-template.md). Link each conclusion to evidence or an experiment and distinguish technical feasibility, innovation, user value, business demand, and hackathon compliance.
+
