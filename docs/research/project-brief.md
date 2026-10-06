@@ -1,48 +1,31 @@
-# Project brief: Synaptic Shield
+# Project brief: FireShield / StoryRoute
 
-**Updated:** 6 October 2026. **Phase:** research evaluation complete; validation experiments proposed. **Repository:** Syedsaadhhh/FireShield.
+**Updated: 7 October 2026. Phase: research and proposed validation. No runnable app yet.**
 
-The founder supplied [the 28 September idea document](source/Synaptic_Shield_Hardened_Idea_File_2026-09-28.md). It is preserved unchanged. The [VC pressure-test report](Synaptic_Shield_VC_Pressure_Test_2026-10-06.md) supplies current corrections, competitive research, a revised thesis, economics and experiments. The [decision memo](../validation/synaptic-shield-decision-memo.md) gives the action recommendation. The [evidence register](evidence-register.json) separates documented claims from unvalidated assumptions.
+The [original Synaptic Shield document](source/Synaptic_Shield_Hardened_Idea_File_2026-09-28.md) remains unchanged. The [6 October VC report](Synaptic_Shield_VC_Pressure_Test_2026-10-06.md) remains the technical/competitive history. The latest [Mom Test / Reddit report](FireShield_Mom_Test_and_Reddit_Research_2026-10-07.md), [evidence ledger](reddit-evidence-2026-10-07.json) and [decision memo](../validation/synaptic-shield-decision-memo.md) govern the current hypothesis.
 
-## Working thesis
+## Working hypothesis
 
-Synaptic Shield is a proposed release-aware integration for a participating publisher's Fire TV player. It accepts reviewed visual-hazard intervals, binds them to the actual released package, applies approved scene-handling policy in the controlled player, and rejects review data for a different release. Its user benefit and buyer demand remain untested.
+StoryRoute is an optional publisher-authored, reviewed alternate scene edit inside a participating Fire TV app. Preserve dialogue/plot with approved alternate footage, bind the route to the exact released outputs, and retain route/version/profile when resuming. Prefer a prepared media route for initial feasibility over late runtime interception. This is untested, not a finalized product name or medical protection promise.
 
-Flashing-light detection, mitigation, timestamps and streaming risk markers already have strong prior art. The candidate contribution is a measured Fire TV integration and auditable editorial/release workflow. This is not a universal overlay over other publishers' apps, a new detector category, or a demonstrated seizure-prevention product. See the report for evidence and limitations.
+Viewer problem evidence includes partner previewing, avoidance and missed-context workarounds in public self-reports. Buyer demand, preferred solution, rights/integration authority, displayed-output behavior and economics remain unvalidated. The proposed buyer is a publisher or OTT app provider with recurring authorized releases and authority over the app and edit.
 
-## User, customer and alternatives
+## Competitive correction
 
-- User hypothesis: viewers choosing reviewed scene handling inside a participating app.
-- Buyer hypothesis: publishers with a modifiable Fire TV player, authorized SDR VOD, a review owner and recurring scene-handling work.
-- Adoption constraint: branded-app providers may control integration; investigate actual authority before recruiting a pilot.
-- Strong substitutes: correcting the delivered media, existing QC tools, streaming risk metadata, warnings, an internal integration, and current practice.
-- Revenue hypothesis: a paid integration pilot followed by a support/platform fee and transparently costed media processing. No confirmed willingness to pay, TAM, CAC, margin or renewal evidence.
+Apple already supplies dimming, supported timeline indications and HLS risk metadata. Amazon offers scene jumping and minute-specific recaps. Skipit advertises warnings/skip/summary and provenance. Filtering, correction and alternate audio have established substitutes. The hypothesis is useful editorial/release integration on Fire TV, not a newly invented detector or summary. No worldwide novelty or clinical superiority is established.
 
-## Proposed first validation scope
+## Broad options
 
-One owned, ad-free SDR VOD title; one selected Fire TV OS/device; one output initially; manually reviewed intervals; immutable release identity; locally available verified policy; pre-event handling and checked skip/resume. Test with harmless markers and displayed-output observations. Demonstrate a changed cut rejecting the old descriptor. Generated context, HDR, live/ad paths, alternate video generation and multi-platform coverage are deferred.
+The latest pass curates 60 unique Reddit threads across 13 clusters after 33 dedicated searches. Ads/UI/performance dominate selected switching stories; no evidence links those completed purchases to our sensory-access idea. Existing tools and platform authority deprioritize generic launchers/cleaners, dialogue boosters, caregiver remote-control clones, travel helpers and aggregators. Ad-transition/resume recovery remains a separate participating-publisher discovery lead. Merge only route-consistent resume into StoryRoute until further evidence.
 
-Fire OS/Kotlin/Media3 is a recommendation to assess against available devices and team experience. Vega remains an alternative with documented media controls. Neither target has been selected through a completed feasibility experiment.
+## First proposed validation scope
 
-## Current evidence gates
+One owned, ad-free short SDR story; one output; one selected Fire TV OS/device; one harmless simulated excluded interval and one approved alternate scene. Verify route/release mapping, output observations, seek/preview paths, restart/profile recovery and rejection of an incompatible edited release. No real flashing material in viewer studies. Manual authoring establishes the baseline before offline AI draft assistance. HDR, live streams, advertising and universal other-app coverage are deferred.
 
-| Gate | State | Missing evidence |
-| --- | --- | --- |
-| G1 Problem | CONDITIONAL | Specific recurring publisher examples and observed viewer task |
-| G2 Gap | CONDITIONAL | Task advantage over strong existing alternatives |
-| G3 Device feasibility | CONDITIONAL | Presented-frame timing and failure behavior on the selected target |
-| G4 User value | UNASSESSED | Operator and viewer task study |
-| G5 Business | UNASSESSED | Budget owner, funded pilot, integration authority and measured costs |
-| G6 Delivery | FAIL at review time | Runnable app, target-platform video and reproducible setup |
+Use the [original discovery protocol](../validation/mom-test-discovery-protocol-2026-10-07.md) for actual viewers, completed switchers, satisfied users and separate budget/integration owners. Proposed learning gates are conditional problem/gap, unassessed authority/device/user value/business/economics, and not-ready event delivery. A paid scoped pilot—not praise—is required before claiming purchase validation.
 
-## Decision record: 6 October 2026
+## Work completed and boundaries
 
-**Selected research direction:** test the publisher release/review integration plus controlled player. This is a leading hypothesis, not a finalized product or validated winner. Reject universal third-party interception for this project; defer AI context from the core promise. Existing Apple streaming markers and commercial PSE correction substantially weaken broad novelty claims. No calibrated numeric success score is justified.
+Public source research, competitor corrections, evidence curation, discovery design and repository documentation updates. No outreach, interviews, app implementation, service spending, deployment, clinical evaluation, device tests or autonomous background work. GitHub access supports authorized repository edits; it does not make the project run continuously.
 
-**Next experiment:** one bounded validation sprint pairing buyer-workflow discovery with a timing/revision feasibility spike, as specified in the report. Advance commercial pilot discussion after concrete workflow evidence and named integration resources; require a paid scope to establish purchase commitment. Stop the runtime promise on unresolved displayed-marker exposure. Reconsider the standalone business if qualified buyers consistently prefer existing correction/status quo.
-
-## Work actually completed
-
-Read the supplied research, inspected relevant repository documentation/licence, researched official platform/standards/product sources, and authored the review and decision memo. Preserved the source and existing third-party reference import. No customer interviews, outreach, spending, app implementation, detector execution, target-device testing, deployment, clinical evaluation or autonomous background work was performed.
-
-The intended event remains Amazon Build, Ship, Shape, Fire TV track. Submission requirements and current deadline are sourced in the report. The working repository name does not itself establish the product's purpose or claims.
+Fire TV remains the intended primary Amazon Build, Ship, Shape track. The latest report records current event requirements and dates; the goal is a real useful product beyond the event. First prize and venture scale are goals, not validated outcomes.

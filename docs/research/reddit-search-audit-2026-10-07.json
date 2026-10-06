@@ -1,0 +1,266 @@
+{
+  "report_date": "2026-10-07",
+  "dedicated_reddit_queries": [
+    {
+      "q": "\"Fire TV\" switched \"Apple TV\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"flashing\" epilepsy",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"too loud\" commercials",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" elderly parent remote help",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV elderly remote support parent dementia",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV photosensitive epilepsy flashing ads",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV continue watching wrong episode lost progress",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV subtitles settings captions hard hearing",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"storage\" \"slow\" \"clear cache\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"sports\" \"delay\" \"spoilers\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"hotel\" \"login\" \"travel\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"Fire TV\" \"subtitles\" \"two\" languages",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"flashing lights\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"epilepsy\" \"streaming\" \"skip\" television",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"migraine\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"sports\" \"delay\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"firestick\" \"spoilers\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"lip sync\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"subtitles\" \"position\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"dialogue\" \"hear\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"two languages\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"photosensitive\" \"Prime Video\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"epilepsy\" \"Firestick\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"flashing\" \"Apple TV\" \"dim\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"epilepsy\" \"ads\" \"streaming\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"subscriptions\" \"search\" paid",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"parental controls\" \"kids\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"hotel\" \"logout\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "\"fire tv\" \"continue watching\" \"2026\"",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Firestick live sports latency spoilers Reddit",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV hotel wifi login logout guest Reddit",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "Fire TV search paid already subscribed Reddit",
+      "domains": [
+        "reddit.com"
+      ]
+    },
+    {
+      "q": "epilepsy streaming movies flashing skip partner Reddit",
+      "domains": [
+        "reddit.com"
+      ]
+    }
+  ],
+  "dedicated_reddit_query_count": 33,
+  "curated_unique_thread_count": 60,
+  "cluster_count": 13,
+  "exclusions": [
+    {
+      "thread_id": "1telly9",
+      "reason": "Crosspost of R12; one behavioral case, not independent corroboration."
+    },
+    {
+      "thread_id": "10l68h8",
+      "reason": "Crosspost of R35; one caption incident."
+    },
+    {
+      "thread_id": "16ufnbv",
+      "reason": "Device status LED, not content flashing."
+    },
+    {
+      "thread_id": "yzdxza",
+      "reason": "Remote infrared controlling decorative lights, not content flashing."
+    },
+    {
+      "thread_id": "1pqz2wg",
+      "reason": "Apple device white-light boot problem, not flashing-light accessibility."
+    },
+    {
+      "thread_id": "1rge28z",
+      "reason": "Promotional service pitch, not credible independent user incident."
+    },
+    {
+      "thread_id": "1wrpqma",
+      "reason": "Unlicensed streaming/code discussion; not used to justify a commercial product."
+    },
+    {
+      "thread_id": "1qt2cqp",
+      "reason": "Unlicensed streaming/code discussion; not used as customer validation."
+    },
+    {
+      "thread_id": "1relkkj",
+      "reason": "Unclear unauthorized app context; excluded from entitlement evidence."
+    },
+    {
+      "thread_id": "1etxm9p",
+      "reason": "OP explicitly not affected; useful request but not an affected viewer incident."
+    },
+    {
+      "thread_id": "1rzg8en",
+      "reason": "Community medical warning, no verified causal assessment; not needed to infer product efficacy."
+    },
+    {
+      "thread_id": "1j3uct4",
+      "reason": "General movie-pausing discussion, not Fire TV or sensory-access evidence."
+    }
+  ],
+  "limitations": [
+    "Purposive public web-search sample, not representative prevalence or churn survey.",
+    "Search excerpts and accessible comments, not exhaustive Reddit API ingestion.",
+    "Thread IDs deduplicated; crossposts handled separately; people across threads not verified or deduplicated.",
+    "Search result counts, votes and commenter counts are not market size.",
+    "Promotional posts, copied bot prompts, medical speculation and unsafe bypass instructions are not product evidence.",
+    "Some recent comments occur in old threads. Explicit dates retained without inferring original dates from relative cached ages."
+  ],
+  "stopping_rule": "Stopped this bounded desk-research pass after repeated themes, existing-solution checks and negative cases; this does not establish exhaustive saturation.",
+  "additional_research": "Authoritative Apple/Amazon/platform/competitor searches beyond the dedicated Reddit query log."
+}

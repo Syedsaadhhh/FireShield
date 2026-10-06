@@ -1,33 +1,31 @@
-# Decision memo: Synaptic Shield
+# Decision memo: Synaptic Shield / StoryRoute
 
-**6 October 2026 · Verdict: TEST a narrow publisher integration.**
+**7 October 2026 · Verdict: DISCOVER and compare a reviewed alternate route.**
 
-Pursue the research and a bounded Fire TV feasibility experiment. Do not pitch a validated medical benefit or an investment-ready venture. Confidence in the identified competitors and documented APIs is stronger than confidence in demand, execution or economics. No calibrated success score is justified: no buyer interviews, paid commitment, device experiment or user study has been completed.
+The [Mom Test / Reddit report](../research/FireShield_Mom_Test_and_Reddit_Research_2026-10-07.md) updates the 6 October recommendation. It includes 33 dedicated public Reddit searches, 60 curated thread IDs, 13 clusters, primary-source overlap checks and an original discovery protocol. This is desk research; no interviews, user/device experiments, paid commitments or app build exist.
 
-The full review and source register are in [the pressure-test report](../research/Synaptic_Shield_VC_Pressure_Test_2026-10-06.md). Source IDs below refer to that report.
+## Leading hypothesis
 
-## Three strengths
+**StoryRoute:** inside a participating publisher's Fire TV app, choose a human-reviewed alternate scene edit that retains dialogue/plot, binds to the exact released package and restores the same route after interruption. Prefer a prepared, checked media route for the first feasibility test over relying on a last-second pause. Author only licensed/owned harmless footage initially.
 
-1. **A specific need:** the Epilepsy Foundation identifies photosensitivity within the epilepsy population. That supports serious viewer need, without claiming a broad revenue TAM. [S01]
-2. **A bounded platform path:** a publisher-owned player avoids the unsupported universal-overlay premise. Vega documents transport controls; Media3 supplies useful frame instrumentation. Actual Fire TV behavior remains untested. [S12, S14, S18]
-3. **A visible product test:** reject release A's reviewed timeline when an edited release B is selected. That creates a concrete demonstration and a measurable failure condition, rather than relying on an AI pitch.
+The job is inferred from viewers already depending on partners to preview, cover eyes or explain missed scenes. Reddit behavior supports discovery, not the buyer or medical efficacy. The strongest merge is route-consistent resume; ad-boundary/resume QA remains a separate B2B discovery lead.
 
-## Three risks
+## Why the broader novelty pitch fails
 
-1. **Prior art and substitutes are stronger than expected.** Apple specifies HLS flashing-risk markers; BATON and Vidchecker describe PSE correction. Publishers may prefer repairing content over maintaining runtime intervention. [S06, S08, S10]
-2. **No economic buyer is validated.** A branded TV app may be supplied by an OTT platform; the publisher may lack integration authority. A sympathetic accessibility contact does not prove budget or engineering capacity. [S22–S23; control restriction is an inference]
-3. **Transport commands do not prove avoided frames.** Late intervention, unsafe retained imagery, wrong media binding or a seek transition can break the claim. A signed file authenticates review data but does not establish correct rendering. [S18, S26; failure scenarios are engineering analysis]
+Apple documents dimming, timeline indication and HLS risk markers. Amazon already has scene jumping and minute-specific recaps. Skipit advertises advance warnings, skips, summaries and review/source choices. VidAngel/ClearPlay filter scenes, and commercial QA offers correction. Do not call a timeline, skip/summary or review badge an invention. The proposed contribution is a useful Fire TV editorial/release workflow; no first-ever or medical superiority claim is established.
 
-## Riskiest assumption
+Generic caregiver control, cleaner, dialogue booster, aggregator and universal cross-app interception are deprioritized because of existing solutions or absent authority. This does not establish every individual complaint is solved.
 
-A publisher with a modifiable Fire TV app has enough recurring unmet work to pay for this integration instead of relying on correction, warnings, or existing metadata. We have no observed evidence for that purchase. The companion technical question is whether the selected device can suppress marked intervals across the supported transport actions.
+## Three decisive tests
 
-## Recommended next action
+1. **User task:** independently learn recent viewing behavior, then compare alternate scenes with current correction/skip/context using harmless footage. Stop the continuity thesis if users prefer existing approaches or editing damages meaning.
+2. **Authority and delivery:** obtain a publisher review owner, authorized edit and modifiable app. Check exact release/route/output identity, negative cases, seek, previews, interruption and displayed output on one Fire TV target. Reject stale routes visibly. Any excluded-marker exposure blocks the corresponding tested avoidance claim.
+3. **Commercial workflow:** two independent operators demonstrate recurring costly work left by existing tools, and one commits a named owner, content access and an engineering window. A paid scope is needed to claim purchase validation. Measure editing/review and adapter/support costs; stop the standalone thesis if all delivery is bespoke or no budget owner exists.
 
-Run one bounded validation sprint before expanding the product: interview 8–12 qualifying publishers/operators/app providers while testing release rejection and intervention on owned, ad-free SDR footage with harmless markers. Proposed commercial advance criterion: two independent prospects demonstrate a recurring workflow, and one commits a named owner, content access and an engineering window. Require a paid written pilot scope to claim purchasing commitment. Timing evaluation must retain displayed-output observations; any marked-frame exposure blocks the avoidance claim for that configuration. These are proposed decision thresholds, not achieved results or safety certification.
+These are proposed founder gates, not completed results or scientific thresholds. Conduct interviews only after outreach is authorized; current work sent no messages. A friendly conversation, free pilot or unpaid LOI is not revenue.
 
-## Pre-mortem and stop conditions
+## VC posture and event posture
 
-The likely failure paths are that existing correction is cheaper, each integration becomes bespoke services work, or rendering failures make the promise unreliable. Stop the standalone business thesis if qualified prospects consistently choose substitutes without identifying unmet work. Stop the runtime claim if the selected platform cannot meet the bounded frame-presentation test. Budget discovery from available founder time first; no outreach, spending or implementation was performed in this review.
+Potential repeatable integration plus preparation/support revenue is unvalidated. Existing correction, internal authoring and close competitors may be cheaper. This may become a partner feature or productized editorial service rather than a VC-scale company. No TAM, CAC, margin or winning probability is asserted.
 
-If the buyer test fails, explore a partner feature only with demonstrated partner demand. If runtime control fails, retain review/export tooling only where customers independently value it. The leading hypothesis remains release review plus a controlled player; generated scene context is deferred.
+The event requires a functioning target-platform app; the repository is still documentation only. Aim for a coherent remote-driven route choice, maintained plot, correct resume and stale-release rejection. The report records the current official requirements and deadline; recheck before submission. The 48,937 registrations observed are event-wide, not Fire TV competitors.
