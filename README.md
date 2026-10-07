@@ -1,39 +1,21 @@
 # FireShield
 
-Working repository for Amazon **Build, Ship, Shape**, targeting the **Fire TV** track and a useful product beyond the event.
+FireShield is an early-stage Fire TV project exploring publisher-approved alternate editions of films.
 
-## Current status
+The proposed experience lets a viewer choose an edition before playback, with important dialogue and story details retained through approved edits. The initial scope is a participating player using media we own or have permission to modify.
 
-Research repository; **no runnable Fire TV app yet**. The latest hypothesis is **StoryRoute**: an optional, publisher-authored reviewed alternate scene edit that preserves dialogue/plot, binds to an exact release and resumes the same route. Viewer preference, publisher demand, rights, integration, device behavior and economics remain unvalidated.
+## Status
 
-The 7 October Mom Test / Reddit pass updates Synaptic Shield after broad user-problem research and stronger competitor checks. Apple already has dimming/timeline/streaming risk metadata; Amazon has scene jumping and recaps; Skipit has warnings/skip/summary. We do not claim worldwide novelty or medical superiority.
+Research phase. There is no runnable application, device-tested prototype, or validated customer demand yet. The product direction and name remain provisional.
 
-## Start here
+## Development
 
-- [Latest research report](docs/research/FireShield_Mom_Test_and_Reddit_Research_2026-10-07.md): 33 dedicated Reddit queries, 60 curated threads, 13 clusters, existing solutions, revised thesis, business gates and sources.
-- [Current decision memo](docs/validation/synaptic-shield-decision-memo.md): recommendation, alternatives and stop conditions.
-- [Mom Test discovery protocol](docs/validation/mom-test-discovery-protocol-2026-10-07.md): neutral viewer/switcher/buyer questions and commitment discipline; no interviews performed.
-- [Reddit evidence ledger](docs/research/reddit-evidence-2026-10-07.json) and [search audit](docs/research/reddit-search-audit-2026-10-07.json): anonymous self-report summaries, limitations and exclusions.
-- [Project brief](docs/research/project-brief.md): current boundaries and first proposed validation.
-- [6 October VC pressure test](docs/research/Synaptic_Shield_VC_Pressure_Test_2026-10-06.md): preserved technical and competitive history.
-- [Original supplied document](docs/research/source/Synaptic_Shield_Hardened_Idea_File_2026-09-28.md): unchanged.
-- [Repository assessment](docs/research/repository-assessment.md), [imported toolkit](third_party/idea-validation-agents/README.md), [third-party notices](THIRD_PARTY_NOTICES.md): research references and reuse attribution.
-- [Fire TV validation workflow](docs/validation/fire-tv-workflow.md), [validation plan](docs/validation/plan.md), [hackathon checklist](docs/hackathon/submission.md), [prototype workspace](prototypes/README.md): supporting planning documents; newest report/memo governs when older plans conflict.
+This repository is reserved for source code, required assets, configuration, and practical setup instructions. Build and run instructions will be added with the first working application.
 
-## Immediate next step
+Research reports, user discovery, and business models are maintained separately. Earlier research remains available in [repository history](https://github.com/Syedsaadhhh/FireShield/tree/e6b96c0f5db680c4514ab8049b2ebb2df384b578). That snapshot includes the original idea document and the unmodified MIT-licensed [idea-validation-agents references and licence](https://github.com/Syedsaadhhh/FireShield/tree/e6b96c0f5db680c4514ab8049b2ebb2df384b578/third_party/idea-validation-agents).
 
-Learn actual recent viewer and publisher behavior, compare existing correction/skip/context with a reviewed alternate scene, and confirm content/app authority. Any later implementation should first test one harmless owned SDR story on one target with exact-route rejection and output observations. Current work has sent no recruitment messages and implemented no app.
+## Intended demonstration
 
-## Setup and operation
+A Fire OS or Vega OS app showing edition selection, captions, saved progress, and consistent resume behaviour with an owned test film. This functionality has not been implemented.
 
-No dependencies are required to read these documents. The application stack is unselected; setup/run commands will be added with code. Amazon's [multi-TV sample](https://github.com/AmazonAppDev/react-native-multi-tv-app-sample) remains a candidate, not an imported or tested foundation.
-
-No external services, keys, deployments, research jobs or scheduled background work are configured. The working name FireShield does not imply a security product. English is the project documentation language.
-
-MaxKmet's pinned MIT-licensed templates remain references with their attribution intact. The project's original-code licence must be selected before an open-source submission.
-
-## Follow-up: Reddit pass 2 and user discovery
-
-The [second-pass report](docs/research/FireTV_Reddit_Pass_2_and_User_Discovery_2026-10-07.md) adds 26 discussion threads beyond the earlier 60, with 20 discovery and four verification queries. The [contact and wording kit](docs/validation/fire-tv-user-contact-kit-2026-10-07.md) supplies 12 public leads, neutral questions, a natural Reddit post, an initial reply and a moderator draft. [The second-pass ledger](docs/research/reddit-pass-2-evidence-2026-10-07.json) records behavior, solved cases, duplicates and source-access limits. No outreach or interviews were conducted.
-
-Fresh evidence strengthens reliability/control and app-release regression discovery; it does not directly validate StoryRoute's alternate-scene preference. StoryRoute stays conditional, alongside participating-app recovery/QA and a minimal incident-handoff hypothesis. Existing tools, app authority, user preference and buyer economics still require comparison. Ask about actual recent behavior before presenting a product; preserve satisfied and solved cases. Most recent leads were available as indexed excerpts, while full-page/reply-status verification was limited.
+An open-source licence, complete source and assets, setup instructions, and actual Fire TV or simulator footage are still needed before a public hackathon submission.

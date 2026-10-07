@@ -24,3 +24,11 @@ local.properties
 *.keystore
 .DS_Store
 Thumbs.db
+
+# Research and business deliverables are maintained separately
+/research/
+/reports/
+/evidence/
+/docs/research/
+/docs/validation/
+/third_party/idea-validation-agents/
