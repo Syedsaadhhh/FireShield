@@ -29,3 +29,9 @@ Use the [original discovery protocol](../validation/mom-test-discovery-protocol-
 Public source research, competitor corrections, evidence curation, discovery design and repository documentation updates. No outreach, interviews, app implementation, service spending, deployment, clinical evaluation, device tests or autonomous background work. GitHub access supports authorized repository edits; it does not make the project run continuously.
 
 Fire TV remains the intended primary Amazon Build, Ship, Shape track. The latest report records current event requirements and dates; the goal is a real useful product beyond the event. First prize and venture scale are goals, not validated outcomes.
+
+## Follow-up: Reddit pass 2 and user discovery
+
+The [second-pass report](FireTV_Reddit_Pass_2_and_User_Discovery_2026-10-07.md) adds 26 discussion threads beyond the earlier 60, with 20 discovery and four verification queries. The [contact and wording kit](../validation/fire-tv-user-contact-kit-2026-10-07.md) supplies 12 public leads, neutral questions, a natural Reddit post, an initial reply and a moderator draft. [The second-pass ledger](reddit-pass-2-evidence-2026-10-07.json) records behavior, solved cases, duplicates and source-access limits. No outreach or interviews were conducted.
+
+Fresh evidence strengthens reliability/control and app-release regression discovery; it does not directly validate StoryRoute's alternate-scene preference. StoryRoute stays conditional, alongside participating-app recovery/QA and a minimal incident-handoff hypothesis. Existing tools, app authority, user preference and buyer economics still require comparison. Ask about actual recent behavior before presenting a product; preserve satisfied and solved cases. Most recent leads were available as indexed excerpts, while full-page/reply-status verification was limited.

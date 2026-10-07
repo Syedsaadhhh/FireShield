@@ -1,0 +1,586 @@
+{
+  "method": {
+    "discovery_query_count": 20,
+    "verification_query_count": 4,
+    "queries": {
+      "discovery": [
+        {
+          "q": "site:reddit.com/r/fireTV \"2026\" \"problem\"",
+          "recency": 120
+        },
+        {
+          "q": "site:reddit.com/r/firetvstick \"2026\" \"switched\"",
+          "recency": 180
+        },
+        {
+          "q": "site:reddit.com/r/appletv \"firestick\" \"switched\"",
+          "recency": 120
+        },
+        {
+          "q": "site:reddit.com/r/fireTV \"2026\" \"fixed\"",
+          "recency": 180
+        },
+        {
+          "q": "\"fire tv\" \"continue watching\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire tv\" \"black screen\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firestick\" \"switched\" \"Apple TV\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire TV\" \"remote\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firetv\" \"remote\" \"disconnecting\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firestick\" \"switched to apple\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire tv\" \"subtitles\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire tv\" \"ads\" \"2026\" \"bought\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"Fire TV\" \"subtitles\" \"September\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"Fire TV\" \"reset\" \"October\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firestick\" \"last watched\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire TV\" \"parent\" \"remote\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firestick\" \"apple tv\" \"switched\" \"September\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firestick\" \"apple tv\" \"switched\" \"August\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"firetv\" \"after ads\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        },
+        {
+          "q": "\"fire tv\" \"skip\" \"scene\" \"2026\"",
+          "domains": [
+            "reddit.com"
+          ]
+        }
+      ],
+      "verification": [
+        {
+          "q": "site:reddit.com/r/fireTV/about/rules research survey self promotion"
+        },
+        {
+          "q": "site:reddit.com/r/firetvstick/about/rules research survey"
+        },
+        {
+          "q": "\"I am officially done\" \"firetvstick\" \"1wnxugz\""
+        },
+        {
+          "q": "\"Fire Stick constantly not working with the Fire Stick Remote\""
+        }
+      ]
+    },
+    "new_thread_count": 26,
+    "previous_thread_count": 60,
+    "combined_unique_thread_ids": 86,
+    "people_verified": 0,
+    "outreach_sent": 0,
+    "source_depth": "Indexed excerpts; full reader attempted for priority contacts, succeeded on satisfied-user B23",
+    "duplicates": [
+      {
+        "thread_id": "1vy4rjy",
+        "same_case_as": "1vyhuqe"
+      },
+      {
+        "thread_id": "1vtnyk4",
+        "same_case_as": "1vto3bc"
+      },
+      {
+        "thread_id": "1vn2pek",
+        "same_case_as": "1vn47l8"
+      }
+    ],
+    "excluded": [
+      "Previously curated switch threads 1qm5ux5 and 1rcy4km are not counted as new.",
+      "Removed OPs and promotional/piracy-service pitches are not contact leads.",
+      "Unclear rights contexts and unsupported medical/technical explanations are not evidence of product efficacy.",
+      "Vendor/community release announcements are not independent customer incidents."
+    ],
+    "limitations": [
+      "Purposive public web-search sample, not prevalence/churn measurement.",
+      "Most recent full pages and subreddit rule pages were unavailable to the reader.",
+      "Public thread URLs do not verify the author’s identity, current activity or consent.",
+      "Thread IDs are deduplicated; individuals and common app-release causes are not fully deduplicated."
+    ]
+  },
+  "threads": [
+    {
+      "source_id": "B01",
+      "thread_id": "1vyhuqe",
+      "title": "Question about removing from “Continue Watching” on Home",
+      "url": "https://www.reddit.com/r/fireTV/comments/1vyhuqe/question_about_removing_from_continue_watching_on/",
+      "post_date_from_indexed_calendar": "2026-08-26",
+      "accessed_date": "2026-10-07",
+      "cluster": "home navigation",
+      "self_reported_behavior": "Cannot navigate to Options to remove a Continue Watching item.",
+      "limits_and_resolution": "Menu-button and source-app-history fixes suggested; OP confirmation absent.",
+      "neutral_followup": "Ask whether any suggested path actually worked.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B02",
+      "thread_id": "1vto3bc",
+      "title": "On 8-19-26 Amazon Firestick/Fire TV Prime Video App Update Broke 4:3 Format.",
+      "url": "https://www.reddit.com/r/fireTV/comments/1vto3bc/on_81926_amazon_firestickfire_tv_prime_video_app/",
+      "post_date_from_indexed_calendar": "2026-08-20",
+      "accessed_date": "2026-10-07",
+      "cluster": "release regression",
+      "self_reported_behavior": "Reports 4:3 Prime Video programs stretching after an update and a home-screen resume workaround.",
+      "limits_and_resolution": "Update attribution is self-report, not reproduced; crosspost 1vtnyk4 counted once.",
+      "neutral_followup": "Ask whether the next episode breaks again and whether the workaround remains usable.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B03",
+      "thread_id": "1qsqlqa",
+      "title": "“Continue Watching” is Stuck",
+      "url": "https://www.reddit.com/r/firestick/comments/1qsqlqa/continue_watching_is_stuck/",
+      "post_date_from_indexed_calendar": "2026-02-01",
+      "accessed_date": "2026-10-07",
+      "cluster": "resume state",
+      "self_reported_behavior": "Continue Watching stopped updating for one or two weeks.",
+      "limits_and_resolution": "OP says restarting twice restored it; solved case.",
+      "neutral_followup": "Ask whether it recurred and how much effort the fix took.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B04",
+      "thread_id": "1vn47l8",
+      "title": "Firestick causing black screens",
+      "url": "https://www.reddit.com/r/fireTV/comments/1vn47l8/firestick_causing_black_screens/",
+      "post_date_from_indexed_calendar": "2026-08-13",
+      "accessed_date": "2026-10-07",
+      "cluster": "display failure",
+      "self_reported_behavior": "Repeated brief blackouts despite power and setting changes.",
+      "limits_and_resolution": "Another same-body post 1vn2pek deduplicated; HDMI explanation is unconfirmed.",
+      "neutral_followup": "Ask what happened when testing another TV and what finally helped.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B05",
+      "thread_id": "1si7j5z",
+      "title": "Here's a new one. Fire TV (3 years old) won't stream anything but Amazon Prime",
+      "url": "https://www.reddit.com/r/fireTV/comments/1si7j5z/heres_a_new_one_fire_tv_3_years_old_wont_stream/",
+      "post_date_from_indexed_calendar": "2026-04-11",
+      "accessed_date": "2026-10-07",
+      "cluster": "app recovery",
+      "self_reported_behavior": "Several apps fail while Prime works; tried network checks and restarts.",
+      "limits_and_resolution": "OP follow-up says factory reset worked; not an unresolved product gap.",
+      "neutral_followup": "Ask about re-setup time and recurrence after reset.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B06",
+      "thread_id": "1uxkeir",
+      "title": "PSA: Black Screen on Amazon Firestick is a known issue",
+      "url": "https://www.reddit.com/r/ParamountPlus/comments/1uxkeir/psa_black_screen_on_amazon_firestick_is_a_known/",
+      "post_date_from_indexed_calendar": "2026-07-15",
+      "accessed_date": "2026-10-07",
+      "cluster": "app recovery",
+      "self_reported_behavior": "Paramount+ thread reports black-screen failures and support contacts.",
+      "limits_and_resolution": "Different commenters report router ad-block changes fixed theirs; no common root cause established.",
+      "neutral_followup": "Ask the relevant commenter which intervention changed the outcome.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B07",
+      "thread_id": "1wx6m3f",
+      "title": "Fire TV Stick works perfectly on other TVs but keeps switching 1080p → 720p → black screen on Sony KLV-32W622G",
+      "url": "https://www.reddit.com/r/fireTV/comments/1wx6m3f/fire_tv_stick_works_perfectly_on_other_tvs_but/",
+      "post_date_from_indexed_calendar": "2026-10-04",
+      "accessed_date": "2026-10-07",
+      "cluster": "display failure",
+      "self_reported_behavior": "Stick works on another TV, but Sony cycles resolution and loses the picture despite several connection/power tests.",
+      "limits_and_resolution": "Specific TV/stick combination; unsupported hardware diagnosis would be premature.",
+      "neutral_followup": "Ask what happened after the last attempted fix and whether they regained settings access.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B08",
+      "thread_id": "1spdcyb",
+      "title": "Constant Issues with my FireTV stick",
+      "url": "https://www.reddit.com/r/firetvstick/comments/1spdcyb/constant_issues_with_my_firetv_stick/",
+      "post_date_from_indexed_calendar": "2026-04-18",
+      "accessed_date": "2026-10-07",
+      "cluster": "remote control",
+      "self_reported_behavior": "Physical remote stopped; phone app repeatedly needed reinstalling, then could not find stick, although another household phone could.",
+      "limits_and_resolution": "Useful within-household comparison; phone/network/permission cause unverified.",
+      "neutral_followup": "Ask about phone differences and the last successful connection.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B09",
+      "thread_id": "1qzgsw0",
+      "title": "Switched from firestick 😃",
+      "url": "https://www.reddit.com/r/appletv/comments/1qzgsw0/switched_from_firestick/",
+      "post_date_from_indexed_calendar": "2026-02-08",
+      "accessed_date": "2026-10-07",
+      "cluster": "completed switching",
+      "self_reported_behavior": "OP reports replacing Firestick with Apple TV and liking device integration; notices changed picture/audio.",
+      "limits_and_resolution": "Completed switch self-report; picture/aspect claims are subjective and disputed.",
+      "neutral_followup": "Ask what triggered purchase and which problems remained afterward.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B10",
+      "thread_id": "1uvarbl",
+      "title": "Replacing the living room TV, do you still bother with a streaming stick these days?",
+      "url": "https://www.reddit.com/r/cordcutters/comments/1uvarbl/replacing_the_living_room_tv_do_you_still_bother/",
+      "post_date_from_indexed_calendar": "2026-07-13",
+      "accessed_date": "2026-10-07",
+      "cluster": "device choice",
+      "self_reported_behavior": "Previously added a Fire Stick when a TV OS became sluggish; now prefers to avoid extra equipment if built-in apps work.",
+      "limits_and_resolution": "Preference and a past workaround, not proof of a new switch or our product demand.",
+      "neutral_followup": "Ask about the earlier actual incident and the current decision.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B11",
+      "thread_id": "1ww7728",
+      "title": "Remote pairing",
+      "url": "https://www.reddit.com/r/fireTV/comments/1ww7728/remote_pairing/",
+      "post_date_from_indexed_calendar": "2026-10-02",
+      "accessed_date": "2026-10-07",
+      "cluster": "remote setup",
+      "self_reported_behavior": "Bought a used Fire TV and could not get past remote pairing after repeated resets.",
+      "limits_and_resolution": "OP follow-up on 6 October says phone-app assistance resolved it.",
+      "neutral_followup": "Ask which steps resolved setup and how long it took.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B12",
+      "thread_id": "1wwk1na",
+      "title": "Disney + App through Firestick",
+      "url": "https://www.reddit.com/r/firetvstick/comments/1wwk1na/disney_app_through_firestick/",
+      "post_date_from_indexed_calendar": "2026-10-03",
+      "accessed_date": "2026-10-07",
+      "cluster": "release regression",
+      "self_reported_behavior": "Disney+ Error 9 on a 4K Max persists after restart, reinstall and cache/data clearing; native TV app works.",
+      "limits_and_resolution": "Other participant says theirs works; reported support escalation is not independently verified.",
+      "neutral_followup": "Ask device/app version, the last failed attempt and what support requested.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B13",
+      "thread_id": "1ww3ifj",
+      "title": "FireTV cannot discover or connect to Wi-Fi. Have tried everything I can think of.",
+      "url": "https://www.reddit.com/r/fireTV/comments/1ww3ifj/firetv_cannot_discover_or_connect_to_wifi_have/",
+      "post_date_from_indexed_calendar": "2026-10-02",
+      "accessed_date": "2026-10-07",
+      "cluster": "offline support",
+      "self_reported_behavior": "TCL Fire TV progressively loses Wi-Fi discovery; OP reports an hour with support and a repair-information requirement needing the TV online.",
+      "limits_and_resolution": "One self-reported support workflow; replacement ticket raised, outcome unknown.",
+      "neutral_followup": "Ask what evidence could be shared while offline and what happened to the ticket.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B14",
+      "thread_id": "1wvyafc",
+      "title": "Fire Stick constantly not working with the Fire Stick Remote",
+      "url": "https://www.reddit.com/r/fireTV/comments/1wvyafc/fire_stick_constantly_not_working_with_the_fire/",
+      "post_date_from_indexed_calendar": "2026-10-02",
+      "accessed_date": "2026-10-07",
+      "cluster": "remote control",
+      "self_reported_behavior": "Remote still controls TV power/volume but loses stick transport control; user unplugs one to four times a day.",
+      "limits_and_resolution": "About a month on an older 4K stick; battery changes and system restart did not resolve it.",
+      "neutral_followup": "Ask about the last interruption, whether phone control worked, and recovery duration.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B15",
+      "thread_id": "1wz5ki8",
+      "title": "Stuck in Boot loop",
+      "url": "https://www.reddit.com/r/firestick/comments/1wz5ki8/stuck_in_boot_loop/",
+      "post_date_from_indexed_calendar": "2026-10-06",
+      "accessed_date": "2026-10-07",
+      "cluster": "boot recovery",
+      "self_reported_behavior": "Stick Lite enters a boot loop; direct connection and accessory checks do not solve it.",
+      "limits_and_resolution": "Suggested reset steps are not confirmed; colored boot flash is not sensory-content evidence.",
+      "neutral_followup": "Ask the eventual repair/replacement outcome and whether power changes were tested.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B16",
+      "thread_id": "1ww3app",
+      "title": "Critically Low On Storage - time for alternative?",
+      "url": "https://www.reddit.com/r/firestick/comments/1ww3app/critically_low_on_storage_time_for_alternative/",
+      "post_date_from_indexed_calendar": "2026-10-02",
+      "accessed_date": "2026-10-07",
+      "cluster": "storage",
+      "self_reported_behavior": "Repeated cleaning/reset and USB attempts leave low-storage warnings; some cleanup reduces reported use.",
+      "limits_and_resolution": "Plans to buy another platform, not a confirmed purchase.",
+      "neutral_followup": "Ask how often warnings return and whether another device was actually purchased.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B17",
+      "thread_id": "1wsk65b",
+      "title": "the  app update",
+      "url": "https://www.reddit.com/r/CriterionChannel/comments/1wsk65b/the_app_update/",
+      "post_date_from_indexed_calendar": "2026-09-28",
+      "accessed_date": "2026-10-07",
+      "cluster": "release regression",
+      "self_reported_behavior": "Criterion Channel buffers/freezes on Insignia Fire TV after update, while phone and other services work; reinstall unsuccessful.",
+      "limits_and_resolution": "OP says customer service is aware; investigation is an existing repair path.",
+      "neutral_followup": "Ask what happened next, time lost and whether they could resume their film.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B18",
+      "thread_id": "1slf6xw",
+      "title": "In the Xfinity Stream App on Firestick how do I go to the Last Channel?",
+      "url": "https://www.reddit.com/r/Comcast_Xfinity/comments/1slf6xw/in_the_xfinity_stream_app_on_firestick_how_do_i/",
+      "post_date_from_indexed_calendar": "2026-04-14",
+      "accessed_date": "2026-10-07",
+      "cluster": "remote navigation",
+      "self_reported_behavior": "Attempts remote/voice instructions to return to the last Xfinity channel without success.",
+      "limits_and_resolution": "App-dependent behavior; do not infer universal Alexa command support.",
+      "neutral_followup": "Ask the most recent switching attempt and the workaround actually used.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B19",
+      "thread_id": "1vj3pkl",
+      "title": "What the hell is this new Plex Update on Firestick? So shit.",
+      "url": "https://www.reddit.com/r/PleX/comments/1vj3pkl/what_the_hell_is_this_new_plex_update_on/",
+      "post_date_from_indexed_calendar": "2026-08-08",
+      "accessed_date": "2026-10-07",
+      "cluster": "release regression",
+      "self_reported_behavior": "Plex controls/shuffle and navigation change after update; OP threatens to find another app.",
+      "limits_and_resolution": "Intent to leave is not cancellation; app/provider defect, not proof of a Fire OS-wide cause.",
+      "neutral_followup": "Ask which change interrupted a real session and whether they actually changed apps.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B20",
+      "thread_id": "1vigb5b",
+      "title": "Fires latest update",
+      "url": "https://www.reddit.com/r/fireTV/comments/1vigb5b/fires_latest_update/",
+      "post_date_from_indexed_calendar": "2026-08-07",
+      "accessed_date": "2026-10-07",
+      "cluster": "release regression",
+      "self_reported_behavior": "Reports new profile steps and sluggish pause/unpause after an update; considers Apple TV.",
+      "limits_and_resolution": "Purchase intent only; cannot attribute issue to OS versus app from the thread.",
+      "neutral_followup": "Ask what was changed, what was tried and whether replacement occurred.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B21",
+      "thread_id": "1wnxugz",
+      "title": "I am officially done",
+      "url": "https://www.reddit.com/r/firetvstick/comments/1wnxugz/i_am_officially_done/",
+      "post_date_from_indexed_calendar": "2026-09-23",
+      "accessed_date": "2026-10-07",
+      "cluster": "churn intent",
+      "self_reported_behavior": "Long-time user reports unexpected reset and lost remote pairing, says they are done with Firestick.",
+      "limits_and_resolution": "Replacement purchase is not verified in retrieved excerpt; causal firmware explanation is unconfirmed.",
+      "neutral_followup": "Ask whether they actually replaced it and what happened immediately before deciding.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B22",
+      "thread_id": "1vzca5c",
+      "title": "Fire stick is completely ruined",
+      "url": "https://www.reddit.com/r/firetvstick/comments/1vzca5c/fire_stick_is_completely_ruined/",
+      "post_date_from_indexed_calendar": "2026-08-26",
+      "accessed_date": "2026-10-07",
+      "cluster": "home navigation",
+      "self_reported_behavior": "Reports pinned apps disappearing and many extra steps to open apps after an update.",
+      "limits_and_resolution": "OP already found a setting for video ads; remaining navigation issue is separate.",
+      "neutral_followup": "Ask which navigation steps remain difficult after disabling the video ad.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B23",
+      "thread_id": "1w9h0qq",
+      "title": "Cut cable last year and apparently I don't need a streaming box anymore",
+      "url": "https://www.reddit.com/r/cordcutters/comments/1w9h0qq/cut_cable_last_year_and_apparently_i_dont_need_a/",
+      "post_date_from_indexed_calendar": "2026-09-07",
+      "accessed_date": "2026-10-07",
+      "cluster": "satisfied user",
+      "self_reported_behavior": "New Hisense Fire TV owner says usual apps and sports work quickly and decides against an extra box after two months.",
+      "limits_and_resolution": "Valuable contrary evidence; hardware and workload differ from older-stick complaints.",
+      "neutral_followup": "Ask what they use daily and how they judged an extra box unnecessary.",
+      "retrieval": "Opened reader plus indexed excerpt",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B24",
+      "thread_id": "1vhnk63",
+      "title": "Fire Stick users: turn off automatic app updates before the new Plex app hits you",
+      "url": "https://www.reddit.com/r/PleX/comments/1vhnk63/fire_stick_users_turn_off_automatic_app_updates/",
+      "post_date_from_indexed_calendar": "2026-08-07",
+      "accessed_date": "2026-10-07",
+      "cluster": "update avoidance",
+      "self_reported_behavior": "Plex user recommends preventing an app update after a worse experience.",
+      "limits_and_resolution": "Workaround/report, not endorsed guidance to disable security or updates generally.",
+      "neutral_followup": "Ask what was concretely worse and whether later versions restored the task.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B25",
+      "thread_id": "1wpifk8",
+      "title": "I feel like I’m in the minority. Does anyone else like the Apple TV update?",
+      "url": "https://www.reddit.com/r/PleX/comments/1wpifk8/i_feel_like_im_in_the_minority_does_anyone_else/",
+      "post_date_from_indexed_calendar": "2026-09-25",
+      "accessed_date": "2026-10-07",
+      "cluster": "Apple comparator",
+      "self_reported_behavior": "Plex Apple TV user likes the update; a commenter improves caption styling with platform accessibility settings.",
+      "limits_and_resolution": "Provider/platform counterexample and resolved styling case; not a Fire TV incident.",
+      "neutral_followup": "Optional comparator: ask what worked in the new UI and which settings helped.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    },
+    {
+      "source_id": "B26",
+      "thread_id": "1uj7s7m",
+      "title": "Apple TV won’t load",
+      "url": "https://www.reddit.com/r/fireTV/comments/1uj7s7m/apple_tv_wont_load/",
+      "post_date_from_indexed_calendar": "2026-06-29",
+      "accessed_date": "2026-10-07",
+      "cluster": "app recovery",
+      "self_reported_behavior": "Apple TV service app fails on one Firestick despite reset and a replacement stick; other household sticks work.",
+      "limits_and_resolution": "OP edit says it works again without a known cause; replacement alone did not establish the cause.",
+      "neutral_followup": "Ask what changed before recovery and whether the issue returned.",
+      "retrieval": "Indexed post/comment excerpt; full reader unavailable or not fetched",
+      "identity_verified": false,
+      "contact_permission_obtained": false,
+      "replyability_verified": false
+    }
+  ]
+}
