@@ -4,7 +4,7 @@
 > **`RUN ON SIMULATOR OR DEVICE`:** **VERIFIED RUNTIME** on Android TV Emulator (`FireShield_TV_API28`, Android 9 API 28 x86 via WHPX QEMU on port 5556; note: [Devpost FAQ](https://amazonappdev2026.devpost.com/details/faqs) explicitly permits an Android TV Emulator for Fire TV track submission testing). All 11 runtime scenarios passed (`nominal_playback`, `process_death_recovery`, `background_foreground`, `dropped_subtitles`, `dropped_audio`, `stale_playlist`, `presentation_mismatch`, `seek_overshoot`, `readiness_timeout`, `corrupt_checkpoint`, `stale_asset_revision`).  
 > **`AWS DEPLOYED`:** Blocked (no live AWS credentials or provisioned cloud resources; dry-run planner and 6-tier readiness inspector verified locally).  
 > **Iteration Cadence:** This repository represents one foundational layer in a multi-iteration B2B product build—not a disposable single-app MVP, not a certified medical device, and not broadcast regulatory certification (HardingFPA/Ofcom/ITU-R BT.1702-3).  
-> See [`BUILD_STATUS.md`](BUILD_STATUS.md), [`RESUME_STATE.md`](RESUME_STATE.md), [`AWS_SETUP.md`](AWS_SETUP.md), and [`Synaptic_Shield_Hardened_Idea_File_2026-09-28.md`](Synaptic_Shield_Hardened_Idea_File_2026-09-28.md) for complete scope boundaries, preserved B2B backlog, and risk registers.
+> See [`BUILD_STATUS.md`](BUILD_STATUS.md), [`RESUME_STATE.md`](RESUME_STATE.md), [`AWS_SETUP.md`](AWS_SETUP.md) for complete scope boundaries, preserved B2B backlog, and risk registers.
 
 ---
 
@@ -41,6 +41,22 @@
 ---
 
 ## 3. Exact Verification Commands
+
+### 3.0 Set Up a Fresh Clone
+
+Prerequisites: Python (the verification host used 3.14.4), FFmpeg on PATH for the full screening suite, and JDK 17 plus an Android SDK for the native build. Install the Android SDK platform/build tools declared in `fireos/app/build.gradle.kts`.
+
+```powershell
+git clone https://github.com/Syedsaadhhh/FireShield.git
+cd FireShield
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest test_compliance.py test_continuity.py test_screening_and_pipeline.py -q
+```
+
+For the commands below, activate this environment or replace `python` with `.\.venv\Scripts\python.exe`. Set `JAVA_HOME` to your JDK 17 installation and `ANDROID_HOME` to your Android SDK; host-specific paths in the measured commands are examples. From the repository root, the portable native command is `.\fireos\gradlew.bat -p fireos testDebugUnitTest assembleDebug --console=plain`.
+
+Create/start an Android TV AVD before runtime verification, install `fireos/app/build/outputs/apk/debug/app-debug.apk`, and pass its actual serial from `adb devices` to the runner. Generated receipts and evidence are local outputs, produced by that runner; the retest examples below require those outputs.
 
 ### 3.1 Run All Python Unit & Integration Tests (`58 passed`)
 ```powershell
