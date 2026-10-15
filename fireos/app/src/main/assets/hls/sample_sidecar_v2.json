@@ -1,0 +1,27 @@
+{
+  "asset_revision_id": "sha256:b1e37c6278de6373d8bacc2284598fb889da3ec13de4b966876b46260a967c96",
+  "detector_version": "fireshield-screening-proto:0.3.0-sdr-bt709-2dfft",
+  "intervals": [
+    {
+      "context_cue_ids": [],
+      "end_ms": 2033,
+      "interval_id": "finding-001",
+      "policy": "pause_before_interval",
+      "safe_resume_ms": 2233,
+      "start_ms": 967,
+      "types": [
+        "luminance_flash"
+      ]
+    }
+  ],
+  "key_id": "publisher-ed25519-key-2026-q3",
+  "manifest_digest": "sha256:e280ed38c28b4554e8ec612f57662de86dd535b4ee93383579a5ebaff7621c82",
+  "rendition_playlist_sha256": "sha256:053085c25af5ad091b464c5a0cbfc2be6ccf93319f2deca63a3df4e4862bb8f9",
+  "rendition_set_id": "hls-v4-hdr10-1080p",
+  "review_state": "approved",
+  "schema_version": 2,
+  "signature": "ed25519:8945cc53a933be4093c24ec55177c226073f386ef36a55f9ec007b655e4c690df268718f829ab5cbcd41194ad4c3599cf22e96aec8c8650e283876ca13a45404",
+  "signing_alg": "Ed25519",
+  "tenant_id": "tenant-prime-studios",
+  "timebase": "presentation_ms"
+}

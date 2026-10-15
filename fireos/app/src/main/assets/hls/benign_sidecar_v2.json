@@ -1,0 +1,16 @@
+{
+  "asset_revision_id": "sha256:d5494e5a366cae772fbacd47532a7021b6518283e99add6a46526146edb0b20a",
+  "detector_version": "fireshield-screening-proto:0.3.0-sdr-bt709-2dfft",
+  "intervals": [],
+  "key_id": "fixture-ed25519-dev-only-run4",
+  "manifest_digest": "sha256:417480592c6577d850bb803a06cc53ad8be794df5fe8b3859b347ae3a9379519",
+  "rendition_playlist_sha256": "sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230",
+  "rendition_set_id": "hls-benign-h264-320x240",
+  "review_state": "approved",
+  "schema_version": 2,
+  "signature": "ed25519:2d5ed4b6dc3858bf5167abcd4c71ab3a6005d046606d1f38add25f4c779599309fd24175c238f33f7a43571972884f12db3e9481f919aedf54af078a41ed1706",
+  "signing_alg": "Ed25519",
+  "tenant_id": "tenant-synthetic-fixture",
+  "timebase": "presentation_ms",
+  "zero_findings_attested": true
+}

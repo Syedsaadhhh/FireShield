@@ -1,0 +1,274 @@
+{
+  "Comment": "FireShield B2B Release Gate Workflow (AWS Step Functions ASL). DEPLOYMENT_STATUS: PENDING_AWS_CREDENTIALS_AND_RESOURCES. Uses DefinitionSubstitutions (${...}) for all ARNs. Enforces mandatory human editorial decision ('approved' vs 'rejected'), AWS Batch container compute for long frame-analysis jobs, async MediaConvert packaging, and post-transcode rendition timeline verification.",
+  "StartAt": "AcquireIdempotencyLockAndHash",
+  "TimeoutSeconds": 14400,
+  "States": {
+    "AcquireIdempotencyLockAndHash": {
+      "Type": "Task",
+      "Resource": "${IngestIdempotencyLambdaArn}",
+      "Parameters": {
+        "tenant_id.$": "$.tenant_id",
+        "source_s3_uri.$": "$.source_s3_uri",
+        "asset_revision_id.$": "$.asset_revision_id",
+        "detector_version.$": "$.detector_version",
+        "table_name": "${ContractsDynamoDBTableName}"
+      },
+      "ResultPath": "$.IdempotencyResult",
+      "TimeoutSeconds": 120,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "Next": "CheckDuplicateIngest"
+    },
+    "CheckDuplicateIngest": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.IdempotencyResult.is_duplicate_completed",
+          "BooleanEquals": true,
+          "Next": "ReturnExistingIdempotentRecord"
+        }
+      ],
+      "Default": "SubmitBatchFrameScreeningJob"
+    },
+    "ReturnExistingIdempotentRecord": {
+      "Type": "Pass",
+      "Comment": "Idempotent short-circuit when (tenant_id, asset_revision_id, detector_version) was already processed.",
+      "End": true
+    },
+    "SubmitBatchFrameScreeningJob": {
+      "Type": "Task",
+      "Comment": "Long-running frame-level luminance/red/pattern analysis runs in AWS Batch container compute, not a short Lambda.",
+      "Resource": "arn:aws:states:::batch:submitJob.sync",
+      "Parameters": {
+        "JobName.$": "States.Format('fireshield-screen-{}', $.tenant_id)",
+        "JobQueue": "${BatchAnalysisJobQueueArn}",
+        "JobDefinition": "${BatchAnalysisJobDefinitionArn}",
+        "ContainerOverrides": {
+          "Environment": [
+            {
+              "Name": "SOURCE_S3_URI",
+              "Value.$": "$.source_s3_uri"
+            },
+            {
+              "Name": "ASSET_REVISION_ID",
+              "Value.$": "$.asset_revision_id"
+            },
+            {
+              "Name": "DETECTOR_VERSION",
+              "Value.$": "$.detector_version"
+            }
+          ]
+        }
+      },
+      "ResultPath": "$.BatchScreeningResult",
+      "TimeoutSeconds": 3600,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Batch.AWSBatchException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 15,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "Next": "AwaitHumanEditorialDecision"
+    },
+    "AwaitHumanEditorialDecision": {
+      "Type": "Task",
+      "Comment": "Mandatory human-in-the-loop editorial release gate via TaskToken callback. No automated score-threshold bypass is permitted.",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+      "Parameters": {
+        "FunctionName": "${EditorialReviewQueueLambdaArn}",
+        "Payload": {
+          "task_token.$": "$$.Task.Token",
+          "tenant_id.$": "$.tenant_id",
+          "asset_revision_id.$": "$.asset_revision_id",
+          "screening_result.$": "$.BatchScreeningResult"
+        }
+      },
+      "ResultPath": "$.EditorialDecision",
+      "HeartbeatSeconds": 3600,
+      "TimeoutSeconds": 86400,
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "Next": "EvaluateEditorialDecision"
+    },
+    "EvaluateEditorialDecision": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.EditorialDecision.review_state",
+          "StringEquals": "approved",
+          "Next": "RunMediaConvertTranscodeJob"
+        },
+        {
+          "Variable": "$.EditorialDecision.review_state",
+          "StringEquals": "rejected",
+          "Next": "RecordEditorialRejectionTerminal"
+        }
+      ],
+      "Default": "FailClosedQuarantine"
+    },
+    "RecordEditorialRejectionTerminal": {
+      "Type": "Task",
+      "Comment": "Records explicit editorial rejection in DynamoDB so the asset cannot be packaged or armed.",
+      "Resource": "arn:aws:states:::dynamodb:putItem",
+      "Parameters": {
+        "TableName": "${ContractsDynamoDBTableName}",
+        "Item": {
+          "pk": {
+            "S.$": "States.Format('TENANT#{}#ASSET#{}', $.tenant_id, $.asset_revision_id)"
+          },
+          "sk": {
+            "S": "RELEASE_STATUS"
+          },
+          "review_state": {
+            "S": "rejected"
+          },
+          "reviewer_id": {
+            "S.$": "$.EditorialDecision.reviewer_id"
+          }
+        }
+      },
+      "Next": "EditorialRejectedEnd"
+    },
+    "EditorialRejectedEnd": {
+      "Type": "Fail",
+      "Error": "AssetEditoriallyRejected",
+      "Cause": "Human reviewer explicitly rejected asset release; sidecar publication blocked."
+    },
+    "RunMediaConvertTranscodeJob": {
+      "Type": "Task",
+      "Comment": "Asynchronous AWS Elemental MediaConvert packaging job (.sync waits for job completion).",
+      "Resource": "arn:aws:states:::mediaconvert:createJob.sync",
+      "Parameters": {
+        "Role": "${MediaConvertRoleArn}",
+        "Settings.$": "$.media_convert_settings",
+        "UserMetadata": {
+          "tenant_id.$": "$.tenant_id",
+          "asset_revision_id.$": "$.asset_revision_id"
+        }
+      },
+      "ResultPath": "$.MediaConvertResult",
+      "TimeoutSeconds": 7200,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "MediaConvert.TooManyRequestsException",
+            "MediaConvert.InternalServerErrorException"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "Next": "VerifyRenditionTimelineMapping"
+    },
+    "VerifyRenditionTimelineMapping": {
+      "Type": "Task",
+      "Comment": "Maps approved source intervals to MediaConvert output presentation timeline (accounting for intro offsets, trims, frame rate, and ad policy) and computes rendition_playlist_sha256.",
+      "Resource": "${TimelineMappingVerifierLambdaArn}",
+      "Parameters": {
+        "tenant_id.$": "$.tenant_id",
+        "asset_revision_id.$": "$.asset_revision_id",
+        "editorial_decision.$": "$.EditorialDecision",
+        "media_convert_result.$": "$.MediaConvertResult"
+      },
+      "ResultPath": "$.MappedRenditionContract",
+      "TimeoutSeconds": 180,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException"
+          ],
+          "IntervalSeconds": 2,
+          "MaxAttempts": 3,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "Next": "PublishSignedSidecarAndRecordLock"
+    },
+    "PublishSignedSidecarAndRecordLock": {
+      "Type": "Task",
+      "Comment": "Signs the verified v1 sidecar manifest and atomically publishes it alongside the rendition metadata.",
+      "Resource": "${SidecarPublisherLambdaArn}",
+      "Parameters": {
+        "mapped_contract.$": "$.MappedRenditionContract",
+        "table_name": "${ContractsDynamoDBTableName}"
+      },
+      "ResultPath": "$.PublicationReceipt",
+      "TimeoutSeconds": 120,
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ErrorInfo",
+          "Next": "FailClosedQuarantine"
+        }
+      ],
+      "End": true
+    },
+    "FailClosedQuarantine": {
+      "Type": "Task",
+      "Comment": "Quarantines failed, unverified, or timed-out assets so no unverified sidecar reaches CloudFront.",
+      "Resource": "${QuarantineHandlerLambdaArn}",
+      "Parameters": {
+        "tenant_id.$": "$.tenant_id",
+        "asset_revision_id.$": "$.asset_revision_id",
+        "error_info.$": "$.ErrorInfo"
+      },
+      "Next": "WorkflowFailedClosed"
+    },
+    "WorkflowFailedClosed": {
+      "Type": "Fail",
+      "Error": "ReleaseGateQuarantined",
+      "Cause": "Workflow failed closed during ingest, screening, editorial review, or timeline mapping."
+    }
+  }
+}

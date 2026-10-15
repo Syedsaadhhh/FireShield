@@ -1,0 +1,13 @@
+{
+  "provenance": "100% synthetic publisher-owned test media generated locally via ffmpeg + FireShield LocalReleaseGatePipeline",
+  "license": "Publisher-Owned Synthetic Test Asset (Apache-2.0 / MIT compatible)",
+  "fixture_id": "ref_pos_7p5hz_luminance_strobe",
+  "tenant_id": "tenant-prime-studios",
+  "asset_revision_id": "sha256:b1e37c6278de6373d8bacc2284598fb889da3ec13de4b966876b46260a967c96",
+  "rendition_set_id": "hls-v4-hdr10-1080p",
+  "rendition_playlist_sha256": "sha256:053085c25af5ad091b464c5a0cbfc2be6ccf93319f2deca63a3df4e4862bb8f9",
+  "signing_alg": "Ed25519",
+  "key_id": "publisher-ed25519-key-2026-q3",
+  "public_key_hex": "b10bb32eae2dd51d9d91f535673308fe14123fda793af655eb81b4a7029e603d",
+  "detector_version": "fireshield-screening-proto:0.3.0-sdr-bt709-2dfft"
+}
