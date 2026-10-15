@@ -387,39 +387,114 @@ def generate_incident_receipt(
     return receipt
 
 
-def validate_and_parse_incident_receipt(raw_json_str: str) -> Dict[str, Any]:
-    """Parses and strictly validates an incident receipt against safety and schema invariants."""
+MAX_RECEIPT_BYTES = 64 * 1024
+RECEIPT_STATE_FIELDS = frozenset({
+    "position_ms", "captions_enabled", "selected_subtitle_track_id",
+    "selected_audio_track_id", "presentation_mode", "rendition_playlist_sha256",
+})
+RECEIPT_FIELDS = frozenset({
+    "receipt_schema_version", "incident_id", "fixture_id", "timestamp_iso",
+    "environment", "recovery_status", "diagnostic_code", "mismatch_fields",
+    "position_delta_ms", "expected_state", "observed_state",
+    "privacy_attestation", "retest_fixture_id", "receipt_digest",
+})
+
+
+def _unique_receipt_object(pairs):
+    obj = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ContinuityError("Duplicate JSON key in receipt")
+        obj[key] = value
+    return obj
+
+
+def _receipt_object(value, fields, label):
+    if not isinstance(value, dict) or set(value) != set(fields):
+        raise ContinuityError(f"Invalid fields in {label}")
+
+
+def _receipt_text(value, label, *, nullable=False):
+    if nullable and value is None:
+        return
+    if not isinstance(value, str) or not value or len(value) > 128:
+        raise ContinuityError(f"Invalid bounded string in {label}")
+    if HOSTILE_CHAR_REGEX.search(value) or any(
+        marker in value.lower() for marker in ("password", "token=", "://")
+    ):
+        raise ContinuityError(f"Unsafe diagnostic string in {label}")
     try:
-        data = json.loads(raw_json_str)
-    except Exception as exc:
-        raise ContinuityError(f"Malformed JSON in incident receipt: {exc}") from exc
+        value.encode("utf-8")
+    except UnicodeError as exc:
+        raise ContinuityError(f"Invalid Unicode in {label}") from exc
 
-    if not isinstance(data, dict):
-        raise ContinuityError("Incident receipt must be a JSON object")
 
-    if data.get("receipt_schema_version") != RECEIPT_SCHEMA_VERSION:
-        raise ContinuityError(f"Unsupported receipt schema version: {data.get('receipt_schema_version')}")
+def _receipt_integer(value, label):
+    if type(value) is not int or not 0 <= value <= 2**53 - 1:
+        raise ContinuityError(f"Invalid non-negative integer in {label}")
 
-    for field in ("incident_id", "fixture_id", "recovery_status", "retest_fixture_id", "mismatch_fields"):
-        if field not in data:
-            raise ContinuityError(f"Missing required receipt field: {field}")
 
-    # Integrity verification if receipt_digest is provided
-    if "receipt_digest" in data:
-        declared_digest = data["receipt_digest"]
+def validate_and_parse_incident_receipt(raw_json_str: str) -> Dict[str, Any]:
+    """Validate bounded v1 diagnostics; a digest is required but is NOT authentication."""
+    if not isinstance(raw_json_str, str) or len(raw_json_str) > MAX_RECEIPT_BYTES:
+        raise ContinuityError("Receipt exceeds input size limit")
+    try:
+        if len(raw_json_str.encode("utf-8")) > MAX_RECEIPT_BYTES:
+            raise ContinuityError("Receipt exceeds input size limit")
+        data = json.loads(raw_json_str, object_pairs_hook=_unique_receipt_object,
+                          parse_constant=lambda _: (_ for _ in ()).throw(
+                              ContinuityError("Non-finite JSON number in receipt")))
+    except (ValueError, RecursionError, UnicodeError) as exc:
+        raise ContinuityError("Malformed JSON in incident receipt") from exc
+
+    _receipt_object(data, RECEIPT_FIELDS, "receipt")
+    if type(data["receipt_schema_version"]) is not int or data["receipt_schema_version"] != RECEIPT_SCHEMA_VERSION:
+        raise ContinuityError("Unsupported receipt schema version")
+    declared_digest = data["receipt_digest"]
+    if not isinstance(declared_digest, str) or not SHA256_PREFIX_REGEX.fullmatch(declared_digest):
+        raise ContinuityError("Missing or invalid receipt_digest")
+    try:
         expected_digest = compute_receipt_digest(data)
-        if declared_digest != expected_digest:
-            raise ContinuityError(
-                f"Incident receipt integrity digest mismatch: declared={declared_digest}, computed={expected_digest}"
-            )
+    except (ValueError, RecursionError, UnicodeError) as exc:
+        raise ContinuityError("Unsupported receipt encoding") from exc
+    if declared_digest != expected_digest:
+        raise ContinuityError("Incident receipt integrity digest mismatch")
 
-    # Safety checks: ensure zero URL with credentials, zero scripts
-    raw_str = json.dumps(data)
-    if "password" in raw_str.lower() or "token=" in raw_str.lower() or "<script" in raw_str.lower():
-        raise ContinuityError("Hostile content or credential pattern detected in incident receipt")
-
-    retest_fix = data.get("retest_fixture_id")
-    if retest_fix not in KNOWN_RETEST_FIXTURES:
-        raise ContinuityError(f"Receipt references unknown retest fixture: {retest_fix}")
-
+    for field in ("incident_id", "fixture_id", "timestamp_iso", "diagnostic_code", "retest_fixture_id"):
+        _receipt_text(data[field], field)
+    _receipt_object(data["environment"], {"app_version", "platform"}, "environment")
+    for field, value in data["environment"].items():
+        _receipt_text(value, field)
+    _receipt_object(data["privacy_attestation"],
+                    {"contains_pii", "contains_video_buffers", "contains_auth_tokens"}, "privacy_attestation")
+    if any(value is not False for value in data["privacy_attestation"].values()):
+        raise ContinuityError("Unsupported privacy attestation")
+    _receipt_integer(data["position_delta_ms"], "position_delta_ms")
+    for state_name in ("expected_state", "observed_state"):
+        state = data[state_name]
+        _receipt_object(state, RECEIPT_STATE_FIELDS, state_name)
+        _receipt_integer(state["position_ms"], state_name + ".position_ms")
+        if type(state["captions_enabled"]) is not bool:
+            raise ContinuityError("captions_enabled must be a boolean")
+        for field in ("selected_subtitle_track_id", "selected_audio_track_id"):
+            _receipt_text(state[field], field, nullable=True)
+        _receipt_text(state["presentation_mode"], "presentation_mode")
+        if not isinstance(state["rendition_playlist_sha256"], str) or not SHA256_PREFIX_REGEX.fullmatch(state["rendition_playlist_sha256"]):
+            raise ContinuityError("Invalid state playlist digest")
+    mismatches = data["mismatch_fields"]
+    if not isinstance(mismatches, list) or any(not isinstance(x, str) or x not in RECEIPT_STATE_FIELDS for x in mismatches):
+        raise ContinuityError("Invalid mismatch_fields")
+    if len(mismatches) != len(set(mismatches)):
+        raise ContinuityError("Duplicate mismatch field")
+    expected_status = "DIVERGENCE_DETECTED" if mismatches else "VERIFIED_MATCH"
+    if data["recovery_status"] != expected_status:
+        raise ContinuityError("Recovery status contradicts mismatch_fields")
+    fixture = data["retest_fixture_id"]
+    if fixture not in KNOWN_RETEST_FIXTURES:
+        raise ContinuityError("Receipt references unknown retest fixture")
+    # Match the producer's fixed mapping; do not let a fault receipt select a benign test.
+    result = RecoveryVerificationResult(data["recovery_status"], tuple(mismatches),
+        data["position_delta_ms"], data["expected_state"], data["observed_state"], data["diagnostic_code"])
+    if fixture != derive_retest_fixture_id(result):
+        raise ContinuityError("Retest fixture contradicts mismatch_fields")
     return data

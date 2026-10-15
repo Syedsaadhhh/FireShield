@@ -132,7 +132,9 @@ object RecoveryVerifier {
                 copy.put(k, obj.opt(k))
             }
         }
-        val canonical = FireShieldContractValidator.canonicalizeJsonValue(copy)
+        // Receipt v1 uses Python's ensure_ascii=True encoding, not the publisher
+        // manifest encoding. Keep this separate so existing signatures do not change.
+        val canonical = canonicalReceiptValue(copy)
         val sha = java.security.MessageDigest.getInstance("SHA-256")
             .digest(canonical.toByteArray(java.nio.charset.StandardCharsets.UTF_8))
         return "sha256:" + sha.joinToString("") { "%02x".format(it) }
@@ -143,6 +145,41 @@ object RecoveryVerifier {
         if (declared.isBlank()) return false
         val computed = computeReceiptDigest(receipt)
         return declared == computed
+    }
+
+    private fun quoteReceiptString(value: String): String = buildString {
+        append('"')
+        for (c in value) {
+            when (c) {
+                '"' -> append("\\\"")
+                '\\' -> append("\\\\")
+                '\b' -> append("\\b")
+                '\u000c' -> append("\\f")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> if (c.code < 32 || c.code > 126) {
+                    append("\\u")
+                    append(c.code.toString(16).padStart(4, '0'))
+                } else append(c)
+            }
+        }
+        append('"')
+    }
+
+    // Constrained v1 receipt schema: ASCII field names and integer-only numbers.
+    // This is not a general-purpose RFC 8785 implementation.
+    private fun canonicalReceiptValue(value: Any?): String = when (value) {
+        null, JSONObject.NULL -> "null"
+        is Boolean, is Int, is Long -> value.toString()
+        is String -> quoteReceiptString(value)
+        is JSONObject -> value.keys().asSequence().toList().sorted().joinToString(",", "{", "}") {
+            quoteReceiptString(it) + ":" + canonicalReceiptValue(value.opt(it))
+        }
+        is JSONArray -> (0 until value.length()).joinToString(",", "[", "]") {
+            canonicalReceiptValue(value.opt(it))
+        }
+        else -> throw FireShieldContractException("Unsupported receipt value type")
     }
 
     fun sanitizeReceiptString(input: String?, maxLen: Int = 128): String {
@@ -218,3 +255,4 @@ object RecoveryVerifier {
         return receipt
     }
 }
+

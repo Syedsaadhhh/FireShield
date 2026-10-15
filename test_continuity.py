@@ -472,14 +472,13 @@ def test_presentation_mode_receipt_selects_fault_fixture_and_unknown_mismatch_re
     with pytest.raises(ContinuityError):
         derive_retest_fixture_id(dataclasses.replace(result, mismatch_fields=("unsupported_field",)))
 
-    bad_fixture_receipt = {
-        "receipt_schema_version": 1,
-        "incident_id": "test-inc-unknown",
-        "fixture_id": "fix-1",
-        "recovery_status": "DIVERGENCE_DETECTED",
-        "retest_fixture_id": "UNKNOWN_RECOVERY_FAULT_V1",
-        "mismatch_fields": ["unsupported_field"],
-    }
+    # A complete, digest-valid envelope isolates the unknown-fixture check.
+    from continuity_engine import compute_receipt_digest
+    bad_fixture_receipt = generate_incident_receipt(
+        incident_id="test-inc-unknown", fixture_id="fix-1", verification_result=result)
+    bad_fixture_receipt["retest_fixture_id"] = "UNKNOWN_RECOVERY_FAULT_V1"
+    bad_fixture_receipt["receipt_digest"] = compute_receipt_digest(bad_fixture_receipt)
     with pytest.raises(ContinuityError) as exc_info:
         validate_and_parse_incident_receipt(json.dumps(bad_fixture_receipt))
     assert "unknown retest fixture" in str(exc_info.value).lower()
+

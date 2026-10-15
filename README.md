@@ -1,5 +1,7 @@
 # FireShield — Version-Bound Hazard Intervention Contract, B2B Release Gate, & Native Fire OS / Android TV Harness
 
+For portable setup, CI artifacts, current evidence boundaries, and remaining integration gates, see [VERIFICATION.md](VERIFICATION.md). The Run 4 results below are the original team’s reported run, not a new run of subsequent changes.
+
 > **Status:** `VERIFIED LOCAL` (`58 passed` Python tests + `22 passed` Kotlin JUnit tests) & `BUILT NATIVE` (`app-debug.apk` compiled for Fire OS / Android TV Media3 ExoPlayer, SHA-256: `8934409D7DE5F4B9C404B6869DE8A78C7B2E7923A782899A95BE8CB6E03185F2`).  
 > **`RUN ON SIMULATOR OR DEVICE`:** **VERIFIED RUNTIME** on Android TV Emulator (`FireShield_TV_API28`, Android 9 API 28 x86 via WHPX QEMU on port 5556; note: [Devpost FAQ](https://amazonappdev2026.devpost.com/details/faqs) explicitly permits an Android TV Emulator for Fire TV track submission testing). All 11 runtime scenarios passed (`nominal_playback`, `process_death_recovery`, `background_foreground`, `dropped_subtitles`, `dropped_audio`, `stale_playlist`, `presentation_mismatch`, `seek_overshoot`, `readiness_timeout`, `corrupt_checkpoint`, `stale_asset_revision`).  
 > **`AWS DEPLOYED`:** Blocked (no live AWS credentials or provisioned cloud resources; dry-run planner and 6-tier readiness inspector verified locally).  
@@ -25,7 +27,7 @@
 | :--- | :--- |
 | [`state_engine.py`](state_engine.py) | **P0 (`VERIFIED LOCAL`):** `SidecarContractValidator` & `FireShieldRuntime` enforcing `schema_version: 2` Ed25519 public-key verification, key rotation/revocation (`revoked_key_ids`, `update_key_ring`), downgrade rejection (`allow_legacy_v1_hmac=False`), interval margin checks, and fail-closed state transitions. |
 | [`continuity_engine.py`](continuity_engine.py) | **P0/Continuity (`VERIFIED LOCAL`):** Versioned atomic checkpointing, recovery verification against observed player tracks, canonical incident receipt generation with SHA-256 integrity digest (`receipt_digest`), privacy guarantees, and deterministic retest simulation. |
-| [`retest_harness.py`](retest_harness.py) | **P0/Continuity CLI (`VERIFIED LOCAL`):** Bounded retest CLI accepting native or synthetic incident receipts, validating `receipt_digest` integrity, and executing deterministic retest scenarios distinguishing `DETECTION_PASS` from `PLAYER_FIX_PASS`. |
+| [`retest_harness.py`](retest_harness.py) | **P0/Continuity CLI (`VERIFIED LOCAL`):** Bounded retest CLI accepting native or synthetic incident receipts, validating `receipt_digest` integrity, and executing deterministic retest scenarios distinguishing `DETECTION_PASS` from `MODEL_PASS`, both explicitly reference-model-only. |
 | [`firetv_player_adapter.py`](firetv_player_adapter.py) | **P0/P3 (`VERIFIED LOCAL`):** Asynchronous `FireShieldExoPlayerAdapter` and `AsyncInMemoryExoPlayerDouble` enforcing in-flight seek shutter blanking until `on_seek_completed_callback` verification. |
 | [`test_compliance.py`](test_compliance.py) | **P0 Tests (`VERIFIED LOCAL`):** 39 unit/adversarial tests covering Ed25519 v2 contracts, v1 downgrade rejection, key rotation, tampered payloads, and asynchronous player seek failure modes. |
 | [`test_continuity.py`](test_continuity.py) | **P0/Continuity Tests (`VERIFIED LOCAL`):** 12 tests covering atomic checkpoint persistence, tamper rejection, active recovery verification, dropped caption/audio detection, cut shift detection, privacy receipt sanitization, hostile-string rejection, receipt digest verification, presentation mode fault selection, and three-way deterministic ablation benchmark. |
@@ -80,3 +82,4 @@ python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/present
 python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/seek_overshoot_receipt.json
 ```
 *(Status: `DETECTION_PASS`, exit code: 0)*
+
