@@ -268,3 +268,37 @@ All error responses strictly adhere to:
 A dedicated Android TV emulator can run `python tools/capture_connected_demo.py --serial emulator-5554` after the debug APK is installed. This controlled harness supplies the review decision, verifies a blanked pre-interval context hold, bypasses into a calm tail, injects caption loss, and checks the receipt against the same source and playlist. It reports player-selection evidence, not rendered-output certification. Release builds ignore its external debug configuration.
 
 `GET /api/v1/releases/{release_id}/native-bundle.zip` downloads only the exact HLS media, WebVTT, public verification key and release contract. It excludes signing seeds and local stores. After installing the debug APK, run `python tools/install_native_package.py HANDOFF.zip --serial emulator-5554` to transfer the files and launch the guarded drill.
+
+## Platform friction log
+
+These are observed integration problems and requests. Application defects are identified as application defects, rather than attributed to the platform.
+
+### Exact media identity across screening and packaging
+
+- Task: establish that a screening report describes the media installed in the TV player.
+- Steps: compare catalog revision hashes, the actual decoder input, the packaged segment, the signed playlist and the native handoff.
+- Expected: one traceable encoded source from analysis to playback.
+- Observed: an application path screened a different negative reference under the benign clip's identity; raw hazard references also used separately labelled reference packaging.
+- Severity: Critical for the validity of this demonstration.
+- Workaround: decode the actual benign segment, create an encoded-media drill as a new revision, reject changed source bytes, and export its exact media with public release metadata.
+- Suggestion: provide a small TV media-pipeline sample that preserves source and rendition identities across review, packaging and player validation, including a changed-source failure test.
+
+### Recovery is a sequence of independent player events
+
+- Task: verify playback continuity after recreation and detect a dropped caption selection.
+- Steps: save a checkpoint, recreate the player, wait for recovery signals, then repeat with a controlled caption-loss fault.
+- Expected: resume only after the required state is available and matches the committed intent.
+- Observed: seek completion, decoder readiness, track availability and rendered-frame signals require separate coordination. A selected track also does not establish that its output was rendered correctly.
+- Severity: Important.
+- Workaround: a bounded readiness gate with operation tokens, actual selection inspection, a paused/blanked divergence latch and a diagnostic receipt. Rendered-output verification remains separately scoped.
+- Suggestion: add a lifecycle recovery reference that includes captions and audio, timeout cases, and a clear evidence vocabulary for selection versus rendered output.
+
+### Portable native build configuration
+
+- Task: reproduce a Windows workstation build in Linux CI.
+- Steps: check out the project, configure JDK 17 and the Android SDK, then run native unit tests and debug/release compilation.
+- Expected: the checked-in configuration should use the environment's selected JDK.
+- Observed: the application repository contained a machine-specific Gradle Java path, which prevented portability.
+- Severity: Important.
+- Workaround: remove the workstation path and select the JDK explicitly in the CI environment.
+- Suggestion: include a minimal cross-platform build recipe and an environment checklist with TV starter projects. This was a project configuration defect, not an Android or Fire OS runtime defect.
