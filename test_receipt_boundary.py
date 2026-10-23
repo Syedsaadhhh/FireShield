@@ -10,7 +10,7 @@ from retest_harness import run_retest_scenario
 
 
 def golden():
-    return json.loads((Path(__file__).parent / "fireos/app/src/test/resources/receipt-v1-unicode.json").read_text())
+    return json.loads((Path(__file__).parent / "fireos/app/src/test/resources/receipt-v1-unicode.json").read_text(encoding="utf-8"))
 
 
 def test_shared_unicode_golden_receipt_and_mutation():
@@ -58,7 +58,8 @@ def test_duplicate_keys_rejected_before_parser_discards_them():
         validate_and_parse_incident_receipt(raw)
 
 
-@pytest.mark.parametrize("raw", ["NaN", "[" * 2000, " " * 65537, "[]"])
+@pytest.mark.parametrize("raw", ["NaN", "[" * 2000, " " * 65537, "[]"],
+    ids=["non-finite-number", "excessive-depth", "oversized-input", "non-object"])
 def test_invalid_or_unbounded_input_rejected(raw):
     with pytest.raises(ContinuityError):
         validate_and_parse_incident_receipt(raw)

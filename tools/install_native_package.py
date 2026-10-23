@@ -30,7 +30,7 @@ def main():
                 raise ValueError('Handoff archive exceeds 32 MB')
             for name in required:
                 (folder / name).write_bytes(archive.read(name))
-        release = json.loads((folder / 'native-release.json').read_text())
+        release = json.loads((folder / 'native-release.json').read_text(encoding='utf-8'))
         for name, field in [('content.ts', 'asset_revision_id'), ('media.m3u8', 'rendition_playlist_sha256')]:
             actual = 'sha256:' + hashlib.sha256((folder / name).read_bytes()).hexdigest()
             if actual != release[field]:
