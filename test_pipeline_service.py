@@ -74,6 +74,26 @@ def wsgi_client(temp_service):
 # 1. Pipeline Service Domain Tests
 # ===========================================================================
 
+def test_demo_packaging_uses_bundled_bytes_and_identifies_reference_scope(wsgi_client):
+    root = pathlib.Path(__file__).resolve().parent / 'fireos/app/src/main/assets/hls'
+    for asset, filename, verified in (
+        ('ast-benign-navy-clip', 'benign_variant.m3u8', True),
+        ('ast-hazard-luminance-strobe', 'variant_1080p.m3u8', False),
+    ):
+        status, _, payload = wsgi_client('/api/v1/demo/packaging/' + asset)
+        assert status == '200 OK'
+        data = json.loads(payload)
+        assert data['playlist_manifest'] == (root / filename).read_text(encoding='utf-8')
+        assert data['source_mapping_verified'] is verified
+
+
+def test_reference_fixture_timeline_matches_generated_frames(temp_service):
+    from screening_analyzer import build_reference_fixtures
+    source = {f['fixture_id']: f for f in build_reference_fixtures()}['ref_pos_7p5hz_luminance_strobe']
+    asset = temp_service.get_asset('ast-hazard-luminance-strobe', 'publisher-demo-tenant')
+    assert asset.duration_ms == round(len(source['frames']) / source['fps'] * 1000)
+    assert '7.5 Hz' in asset.name
+
 def test_service_asset_seeding_and_import(temp_service):
     tenant = "publisher-demo-tenant"
     assets = temp_service.list_assets(tenant)

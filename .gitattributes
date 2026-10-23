@@ -1,0 +1,12 @@
+* text=auto
+*.m3u8 text eol=lf
+*.vtt text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.properties text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+fireos/app/src/main/assets/hls/*.ts binary
+*.jar binary

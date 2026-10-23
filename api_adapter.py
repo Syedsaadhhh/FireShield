@@ -306,6 +306,9 @@ class FireShieldLocalApiAdapter:
             "detail": result["detail"],
             "verification_result": result["verification_result"],
             "mismatch_fields": result["mismatch_fields"],
+            "evidence_scope": result.get("evidence_scope", "REFERENCE_MODEL_ONLY"),
+            "native_player_executed": False,
+            "player_fix_verified": False,
         }
         stored.retest_history.append(execution_entry)
 
@@ -476,6 +479,27 @@ def create_wsgi_app(
                     return [html_content]
 
             # Route 1: Health check
+            if path.startswith("/api/v1/demo/packaging/") and method == "GET":
+                asset_id = path.rsplit("/", 1)[-1]
+                asset = api.pipeline_service.get_asset(asset_id, auth.tenant_id)
+                if asset_id == "ast-benign-navy-clip":
+                    playlist_name = "benign_variant.m3u8"
+                    source_mapping_verified = True
+                elif asset_id in ("ast-hazard-luminance-strobe", "ast-hazard-spatial-checkerboard"):
+                    playlist_name = "variant_1080p.m3u8"
+                    source_mapping_verified = False
+                else:
+                    raise ApiError("No packaged demo media exists for this asset. Supply its exact packaged playlist through the publication API.", 409)
+                playlist_path = pathlib.Path(__file__).resolve().parent / "fireos/app/src/main/assets/hls" / playlist_name
+                if not playlist_path.is_file():
+                    raise ApiError("Bundled HLS playlist is missing from this checkout.", 503)
+                body = json.dumps({"playlist_manifest": playlist_path.read_text(encoding="utf-8"),
+                    "media_uri": "asset:///hls/" + playlist_name,
+                    "source_mapping_verified": source_mapping_verified,
+                    "scope": "Bundled native fixture" if source_mapping_verified else "Reference packaging only; source-to-output equivalence has not been verified"}).encode()
+                start_response("200 OK", cors_headers)
+                return [body]
+
             if path in ("", "/health", "/api/v1/health") and method == "GET":
                 body = json.dumps(api.get_health(), indent=2).encode("utf-8")
                 start_response("200 OK", cors_headers)

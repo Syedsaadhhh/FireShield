@@ -99,8 +99,8 @@ def get_or_create_dev_signing_seed() -> bytes:
         DEV_SEED_FILE.parent.mkdir(parents=True, exist_ok=True)
         DEV_SEED_FILE.write_bytes(seed)
         return seed
-    except Exception:
-        return DEFAULT_PIPELINE_SEED
+    except Exception as exc:
+        raise RuntimeError("Cannot persist the local demo signing key in runtime_data; check directory permissions.") from exc
 
 
 class PipelineServiceError(Exception):
@@ -324,12 +324,12 @@ class LocalPipelineService:
         ast_strobe = AssetRecord(
             asset_id="ast-hazard-luminance-strobe",
             tenant_id=tenant_id,
-            name="Synthetic 15Hz Luminance Strobe Hazard Fixture",
+            name="Synthetic 7.5 Hz Luminance Flash Reference",
             asset_revision_id=strobe_sha,
             source_type="synthetic_fixture",
             source_path="fixtures/strobe_hazard",
             size_bytes=len(strobe_bytes),
-            duration_ms=2000,
+            duration_ms=round(len(strobe_fixture["frames"]) / strobe_fixture["fps"] * 1000),
             fps=30.0,
             width=64,
             height=64,
@@ -341,6 +341,9 @@ class LocalPipelineService:
         if (tenant_id, ast_strobe.asset_id) not in self._assets:
             self._assets[(tenant_id, ast_strobe.asset_id)] = ast_strobe
             self._asset_rev_to_id[(tenant_id, strobe_sha)] = ast_strobe.asset_id
+        else:
+            current = self._assets[(tenant_id, ast_strobe.asset_id)]
+            current.name, current.duration_ms = ast_strobe.name, ast_strobe.duration_ms
 
         # Asset 3: Reference 2D Spatial Checkerboard Hazard Clip
         pattern_fixture = ref_fixtures["ref_pos_2d_checkerboard"]
@@ -354,7 +357,7 @@ class LocalPipelineService:
             source_type="synthetic_fixture",
             source_path="fixtures/checkerboard_hazard",
             size_bytes=len(pattern_bytes),
-            duration_ms=2000,
+            duration_ms=round(len(pattern_fixture["frames"]) / pattern_fixture["fps"] * 1000),
             fps=30.0,
             width=64,
             height=64,
@@ -366,6 +369,9 @@ class LocalPipelineService:
         if (tenant_id, ast_pattern.asset_id) not in self._assets:
             self._assets[(tenant_id, ast_pattern.asset_id)] = ast_pattern
             self._asset_rev_to_id[(tenant_id, pattern_sha)] = ast_pattern.asset_id
+        else:
+            current = self._assets[(tenant_id, ast_pattern.asset_id)]
+            current.name, current.duration_ms = ast_pattern.name, ast_pattern.duration_ms
 
     # -----------------------------------------------------------------------
     # Asset Management

@@ -1,2023 +1,3531 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FireShield — Broadcast Standards & Continuous Recovery Suite</title>
-  <style>
-    :root {
-      /* Neutral Graphite Stage (Film QC Darkroom) */
-      --stage-bg: #0d1017;
-      --stage-surface: #131722;
-      --stage-panel: #181e2b;
-      --stage-border: #222a3a;
-      --stage-border-bright: #313d52;
-
-      /* Warm Ivory & Parchment Accents */
-      --ivory-card: #151a24;
-      --ivory-border: #2d3647;
-      --ivory-text: #f8fafc;
-      --ivory-muted: #94a3b8;
-
-      /* Typography & Ink */
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --text-tertiary: #64748b;
-      --text-ink: #0f172a;
-
-      /* Authority & Verification: Muted Bronze / Aged Brass */
-      --bronze: #c89b3c;
-      --bronze-hover: #dfa837;
-      --bronze-dark: #8e6822;
-      --bronze-subtle: rgba(200, 155, 60, 0.12);
-      --bronze-border: rgba(200, 155, 60, 0.35);
-
-      /* Semantic Status Tokens */
-      --clean: #10b981;
-      --clean-subtle: rgba(16, 185, 129, 0.12);
-      --clean-border: rgba(16, 185, 129, 0.3);
-
-      --hazard: #f59e0b;
-      --hazard-subtle: rgba(245, 158, 11, 0.14);
-      --hazard-border: rgba(245, 158, 11, 0.35);
-
-      --rejected: #ef4444;
-      --rejected-subtle: rgba(239, 68, 68, 0.14);
-      --rejected-border: rgba(239, 68, 68, 0.35);
-
-      --published: #38bdf8;
-      --published-subtle: rgba(56, 189, 248, 0.12);
-      --published-border: rgba(56, 189, 248, 0.3);
-
-      /* Interactive Timeline */
-      --timeline-bg: #090b10;
-      --timeline-track: #151a24;
-      --timeline-ruler: #202735;
-      --timeline-playhead: #f59e0b;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--stage-bg);
-      color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-      font-size: 13px;
-      line-height: 1.5;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    .tabular-nums {
-      font-variant-numeric: tabular-nums;
-      font-family: "JetBrains Mono", "SF Mono", Consolas, "Courier New", monospace;
-    }
-
-    /* Top App Navigation Bar */
-    header {
-      background: var(--stage-surface);
-      border-bottom: 1px solid var(--stage-border);
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .brand-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-logo {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      background: var(--bronze-subtle);
-      border: 1px solid var(--bronze-border);
-      border-radius: 6px;
-      color: var(--bronze);
-      font-weight: 800;
-      font-size: 14px;
-    }
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #fff;
-    }
-
-    .brand-subtitle {
-      font-size: 11px;
-      color: var(--text-secondary);
-      letter-spacing: 0.02em;
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: 6px;
-      background: var(--stage-bg);
-      padding: 3px;
-      border-radius: 6px;
-      border: 1px solid var(--stage-border);
-    }
-
-    .nav-tab {
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      background: transparent;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .nav-tab:hover {
-      color: var(--text-primary);
-    }
-
-    .nav-tab.active {
-      background: var(--stage-panel);
-      color: var(--bronze);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-
-    .header-badges {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pill-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 14px;
-      font-size: 11px;
-      font-weight: 600;
-      border: 1px solid var(--stage-border);
-      background: var(--stage-panel);
-      color: var(--text-secondary);
-    }
-
-    .pill-badge.active-bronze {
-      border-color: var(--bronze-border);
-      background: var(--bronze-subtle);
-      color: var(--bronze);
-    }
-
-    .pill-badge.pending-orange {
-      border-color: var(--hazard-border);
-      background: var(--hazard-subtle);
-      color: var(--hazard);
-    }
-
-    /* Main Workbench Layout */
-    .workbench-container {
-      display: flex;
-      height: calc(100vh - 56px);
-      overflow: hidden;
-    }
-
-    /* Column 1: Asset Catalog Rail */
-    .catalog-rail {
-      width: 290px;
-      flex-shrink: 0;
-      background: var(--stage-surface);
-      border-right: 1px solid var(--stage-border);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .rail-header {
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--stage-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .rail-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-    }
-
-    .asset-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-    }
-
-    .asset-item {
-      padding: 10px 12px;
-      border-radius: 6px;
-      border: 1px solid transparent;
-      margin-bottom: 6px;
-      cursor: pointer;
-      background: var(--stage-panel);
-      transition: all 0.15s ease;
-    }
-
-    .asset-item:hover {
-      border-color: var(--stage-border-bright);
-      background: #1e2637;
-    }
-
-    .asset-item.selected {
-      border-color: var(--bronze-border);
-      background: #232c3e;
-    }
-
-    .asset-item-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .asset-item-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .status-tag {
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .tag-clean { background: var(--clean-subtle); color: var(--clean); border: 1px solid var(--clean-border); }
-    .tag-hazard { background: var(--hazard-subtle); color: var(--hazard); border: 1px solid var(--hazard-border); }
-    .tag-unscreened { background: rgba(148, 163, 184, 0.1); color: var(--text-secondary); border: 1px solid var(--stage-border); }
-    .tag-approved { background: var(--bronze-subtle); color: var(--bronze); border: 1px solid var(--bronze-border); }
-    .tag-rejected { background: var(--rejected-subtle); color: var(--rejected); border: 1px solid var(--rejected-border); }
-    .tag-published { background: var(--published-subtle); color: var(--published); border: 1px solid var(--published-border); }
-
-    /* Column 2: Center Stage & Multi-Track Timeline */
-    .center-stage {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      background: var(--stage-bg);
-      border-right: 1px solid var(--stage-border);
-    }
-
-    .viewing-area {
-      padding: 20px 24px 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .player-monitor-frame {
-      width: 100%;
-      max-width: 720px;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      border: 1px solid var(--stage-border-bright);
-      border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    }
-
-    #preview-canvas {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .monitor-timecode-hud {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.05em;
-      pointer-events: none;
-    }
-
-    .monitor-hazard-warning-hud {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(220, 38, 38, 0.9);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      display: none;
-      animation: pulse 1s infinite alternate;
-    }
-
-    @keyframes pulse { from { opacity: 0.7; } to { opacity: 1.0; } }
-
-    .monitor-subtitle-overlay {
-      position: absolute;
-      bottom: 16px;
-      left: 24px;
-      right: 24px;
-      text-align: center;
-      color: #ffeb3b;
-      font-size: 14px;
-      font-weight: 600;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000;
-      pointer-events: none;
-    }
-
-    /* Player Transport Controls */
-    .transport-bar {
-      width: 100%;
-      max-width: 720px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 12px;
-      padding: 8px 14px;
-      background: var(--stage-surface);
-      border: 1px solid var(--stage-border);
-      border-radius: 6px;
-    }
-
-    .transport-btn-group {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .btn-icon {
-      background: var(--stage-panel);
-      border: 1px solid var(--stage-border);
-      color: var(--text-primary);
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      transition: all 0.15s ease;
-    }
-
-    .btn-icon:hover {
-      background: var(--stage-border-bright);
-      color: #fff;
-    }
-
-    .btn-icon.play-btn {
-      background: var(--bronze-subtle);
-      border-color: var(--bronze-border);
-      color: var(--bronze);
-    }
-
-    .btn-icon.play-btn:hover {
-      background: var(--bronze);
-      color: var(--text-ink);
-    }
-
-    /* Interactive Multi-Track Timeline */
-    .timeline-container {
-      padding: 16px 24px 24px;
-      flex: 1;
-    }
-
-    .timeline-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .timeline-title {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-    }
-
-    .timeline-viewport {
-      background: var(--timeline-bg);
-      border: 1px solid var(--stage-border);
-      border-radius: 6px;
-      position: relative;
-      user-select: none;
-      cursor: crosshair;
-      overflow: hidden;
-    }
-
-    .time-ruler {
-      height: 24px;
-      background: var(--timeline-ruler);
-      border-bottom: 1px solid var(--stage-border);
-      position: relative;
-    }
-
-    .ruler-tick {
-      position: absolute;
-      bottom: 0;
-      height: 6px;
-      width: 1px;
-      background: rgba(255,255,255,0.25);
-    }
-
-    .ruler-label {
-      position: absolute;
-      top: 4px;
-      font-size: 10px;
-      color: var(--text-secondary);
-      transform: translateX(-50%);
-    }
-
-    .track-row {
-      height: 36px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .track-label {
-      position: absolute;
-      left: 10px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-tertiary);
-      z-index: 5;
-      pointer-events: none;
-    }
-
-    .timeline-hazard-block {
-      position: absolute;
-      top: 4px;
-      bottom: 4px;
-      background: rgba(217, 119, 6, 0.45);
-      border: 1px solid #f59e0b;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      z-index: 6;
-    }
-
-    .timeline-hazard-block:hover, .timeline-hazard-block.active {
-      background: rgba(217, 119, 6, 0.75);
-      border-color: #fbbf24;
-      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
-    }
-
-    .timeline-safe-margin {
-      position: absolute;
-      top: 8px;
-      bottom: 8px;
-      background: repeating-linear-gradient(45deg, rgba(55, 65, 81, 0.7), rgba(55, 65, 81, 0.7) 4px, rgba(31, 41, 55, 0.7) 4px, rgba(31, 41, 55, 0.7) 8px);
-      border-right: 1px dashed rgba(255,255,255,0.4);
-      pointer-events: none;
-      z-index: 4;
-    }
-
-    .timeline-subtitle-block {
-      position: absolute;
-      top: 6px;
-      bottom: 6px;
-      background: rgba(37, 99, 235, 0.4);
-      border: 1px solid #3b82f6;
-      border-radius: 3px;
-      font-size: 10px;
-      color: #bfdbfe;
-      padding: 0 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: flex;
-      align-items: center;
-      z-index: 6;
-    }
-
-    .timeline-playhead {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--timeline-playhead);
-      z-index: 10;
-      pointer-events: none;
-      box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
-    }
-
-    .playhead-handle {
-      position: absolute;
-      top: 0;
-      left: -6px;
-      width: 14px;
-      height: 12px;
-      background: var(--timeline-playhead);
-      clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
-    }
-
-    /* Column 3: Editorial Clearance Inspector */
-    .inspector-drawer {
-      width: 380px;
-      flex-shrink: 0;
-      background: var(--stage-surface);
-      border-left: 1px solid var(--stage-border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .inspector-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--stage-border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .inspector-title {
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--bronze);
-    }
-
-    .inspector-content {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--ivory-card);
-      border: 1px solid var(--ivory-border);
-      border-radius: 6px;
-      padding: 14px;
-    }
-
-    .card-header {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-secondary);
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .metrics-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .metrics-table td {
-      padding: 6px 4px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .metrics-table td:last-child {
-      text-align: right;
-      font-weight: 600;
-    }
-
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      color: var(--text-secondary);
-      margin-bottom: 5px;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 8px 10px;
-      background: var(--stage-bg);
-      border: 1px solid var(--stage-border);
-      border-radius: 4px;
-      color: #fff;
-      font-size: 12px;
-    }
-
-    .form-control:focus {
-      outline: none;
-      border-color: var(--bronze);
-    }
-
-    textarea.form-control {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .btn {
-      padding: 8px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-    }
-
-    .btn-bronze {
-      background: var(--bronze);
-      color: var(--text-ink);
-    }
-
-    .btn-bronze:hover:not(:disabled) {
-      background: var(--bronze-hover);
-    }
-
-    .btn-bronze:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .btn-secondary {
-      background: var(--stage-panel);
-      border: 1px solid var(--stage-border);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      background: var(--stage-border-bright);
-    }
-
-    .btn-danger {
-      background: var(--rejected);
-      color: #fff;
-    }
-
-    .btn-full { width: 100%; }
-
-    .code-snippet {
-      background: #090c12;
-      border: 1px solid var(--stage-border);
-      padding: 8px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: #cbd5e1;
-      max-height: 100px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-
-    /* Modal / Drawer for Managed Asset Import */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(2px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-    }
-
-    .modal-dialog {
-      background: var(--stage-surface);
-      border: 1px solid var(--stage-border-bright);
-      border-radius: 8px;
-      width: 520px;
-      max-width: 90vw;
-      padding: 20px;
-      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      border-bottom: 1px solid var(--stage-border);
-      padding-bottom: 10px;
-    }
-
-    .modal-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--bronze);
-    }
-
-    /* FireTrace Lab View */
-    .view-container {
-      display: none;
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-    }
-
-    .view-container.active-view {
-      display: block;
-    }
-
-    .table-container {
-      background: var(--stage-surface);
-      border: 1px solid var(--stage-border);
-      border-radius: 6px;
-      overflow: hidden;
-      margin-bottom: 24px;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .data-table th, .data-table td {
-      padding: 10px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--stage-border);
-    }
-
-    .data-table th {
-      background: var(--stage-panel);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--text-secondary);
-    }
-
-    .data-table tr:hover td {
-      background: rgba(255,255,255,0.02);
-    }
-
-    /* Inline Status & Feedback Banners */
-    .inline-feedback-banner {
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 11px;
-      margin-top: 8px;
-      display: none;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .feedback-info {
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #93c5fd;
-    }
-    .feedback-success {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #6ee7b7;
-    }
-    .feedback-error {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #fca5a5;
-    }
-    .feedback-warning {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fcd34d;
-    }
-
-    /* Responsive Queries */
-    @media (max-width: 1200px) {
-      .catalog-rail { width: 240px; }
-      .inspector-drawer { width: 320px; }
-    }
-
-    @media (max-width: 900px) {
-      header {
-        height: auto;
-        flex-direction: column;
-        align-items: stretch;
-        padding: 10px 14px;
-        gap: 10px;
-      }
-      .brand-section {
-        justify-content: space-between;
-      }
-      .nav-tabs {
-        width: 100%;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
-      .nav-tab {
-        flex: 1;
-        text-align: center;
-        padding: 8px 6px;
-        font-size: 11px;
-      }
-      .header-badges {
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-      .pill-badge {
-        font-size: 10px;
-        padding: 3px 8px;
-      }
-      .workbench-container {
-        flex-direction: column;
-        height: auto;
-      }
-      .catalog-rail, .center-stage, .inspector-drawer {
-        width: 100%;
-        max-width: 100%;
-        border: none;
-      }
-      .catalog-rail {
-        height: auto;
-        max-height: 220px;
-        border-bottom: 1px solid var(--stage-border);
-      }
-      .transport-bar {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .inspector-drawer {
-        border-top: 1px solid var(--stage-border);
-      }
-    }
-
-    @media (max-width: 500px) {
-      body {
-        overflow-x: hidden;
-      }
-      header {
-        padding: 8px;
-      }
-      .nav-tabs {
-        flex-direction: column;
-        gap: 4px;
-      }
-      .nav-tab {
-        width: 100%;
-      }
-      .header-badges {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .pill-badge {
-        width: 100%;
-        justify-content: flex-start;
-      }
-      .transport-btn-group {
-        width: 100%;
-        justify-content: space-between;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Top App Navigation -->
-  <header>
-    <div class="brand-section">
-      <div class="brand-logo">FS</div>
-      <div>
-        <div class="brand-title">FireShield</div>
-        <div class="brand-subtitle">Standards Clearance & Continuous Recovery Suite</div>
-      </div>
-    </div>
-
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchView('clearance')">Screening & Clearance</button>
-      <button class="nav-tab" onclick="switchView('firetrace')">FireTrace Incident Lab</button>
-      <button class="nav-tab" onclick="switchView('releases')">Ed25519 Sidecars</button>
-    </div>
-
-    <div class="header-badges">
-      <span class="pill-badge active-bronze" id="tenant-pill">Tenant: publisher-demo-tenant</span>
-      <span class="pill-badge" id="engine-health-pill">Engine: Local Loopback OK</span>
-      <span class="pill-badge pending-orange" id="tv-status-pill">Android TV: PENDING / NO AVD</span>
-    </div>
-  </header>
-
-  <!-- VIEW 1: Screening & Clearance Suite -->
-  <div id="view-clearance" class="workbench-container">
-    <!-- Column 1: Asset Catalog Rail -->
-    <aside class="catalog-rail">
-      <div class="rail-header">
-        <span class="rail-title">Catalog Assets</span>
-        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openImportModal()">+ Ingest</button>
-      </div>
-      <div class="asset-list" id="asset-list-container">
-        <!-- Rendered via JavaScript -->
-        <div style="padding: 12px; color: var(--text-tertiary);">Loading catalog assets...</div>
-      </div>
-    </aside>
-
-    <!-- Column 2: Center Stage (Frame Monitor & Timeline) -->
-    <main class="center-stage">
-      <div class="viewing-area">
-        <div class="player-monitor-frame">
-          <canvas id="preview-canvas" width="640" height="360"></canvas>
-          <div class="monitor-timecode-hud tabular-nums" id="hud-timecode">00:00:00:00</div>
-          <div class="monitor-hazard-warning-hud" id="hud-hazard-pill">! HAZARD DETECTED !</div>
-          <div class="monitor-subtitle-overlay" id="hud-subtitle"></div>
-        </div>
-
-        <div class="transport-bar">
-          <div class="transport-btn-group">
-            <button class="btn-icon" title="Jump to Start" onclick="seekToMs(0)">&#x23EE;</button>
-            <button class="btn-icon" title="Step Back 1 Frame" onclick="stepFrame(-1)">&#x25C0;</button>
-            <button class="btn-icon play-btn" id="play-pause-btn" title="Play / Pause" onclick="togglePlayback()">&#x25B6;</button>
-            <button class="btn-icon" title="Step Forward 1 Frame" onclick="stepFrame(1)">&#x25B6;</button>
-            <button class="btn-icon" title="Jump to Hazard" onclick="jumpToHazard()">&#x26A0;</button>
-          </div>
-
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="tabular-nums" style="font-size: 13px; font-weight: 700;" id="transport-timecode">0 ms / 0 ms</span>
-          </div>
-
-          <div style="display: flex; gap: 6px;">
-            <button class="btn btn-bronze" style="padding: 5px 10px; font-size: 11px;" id="btn-run-screening" onclick="triggerScreening()">Run Screening</button>
-          </div>
-        </div>
-        <div id="screening-feedback" class="inline-feedback-banner"></div>
-      </div>
-
-      <!-- Multi-Track Interactive Visual Timeline -->
-      <div class="timeline-container">
-        <div class="timeline-header">
-          <span class="timeline-title">Synchronized Presentation Timeline</span>
-          <span style="font-size: 11px; color: var(--text-secondary);" id="timeline-scale-label">Duration: 2000 ms</span>
-        </div>
-
-        <div class="timeline-viewport" id="timeline-viewport" onclick="onTimelineClick(event)">
-          <!-- Time Ruler -->
-          <div class="time-ruler" id="timeline-ruler-track"></div>
-
-          <!-- Track 1: Content Duration Track -->
-          <div class="track-row" id="track-content">
-            <span class="track-label">Sequence</span>
-          </div>
-
-          <!-- Track 2: Visual Hazard Intervals Track -->
-          <div class="track-row" id="track-hazards">
-            <span class="track-label">Hazard</span>
-          </div>
-
-          <!-- Track 3: Narrative Subtitles Track -->
-          <div class="track-row" id="track-subtitles">
-            <span class="track-label">Subtitles</span>
-          </div>
-
-          <!-- Interactive Playhead Needle -->
-          <div class="timeline-playhead" id="timeline-playhead" style="left: 0px;">
-            <div class="playhead-handle"></div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Column 3: Editorial Clearance Inspector -->
-    <aside class="inspector-drawer">
-      <div class="inspector-header">
-        <span class="inspector-title">Clearance Inspector</span>
-        <span class="status-tag tag-unscreened" id="inspector-status-badge">Unreviewed</span>
-      </div>
-
-      <div class="inspector-content">
-        <!-- Section 1: Candidate Hazard Metrics -->
-        <div class="card">
-          <div class="card-header">
-            <span>1. Photometric Hazard Metrics</span>
-            <span class="status-tag tag-hazard" id="card-hazard-tag">Pending</span>
-          </div>
-          <table class="metrics-table tabular-nums">
-            <tr><td>Interval Window</td><td id="m-window">—</td></tr>
-            <tr><td>Duration / Safe Resume</td><td id="m-duration">—</td></tr>
-            <tr><td>Peak Luminance Delta (&Delta;L)</td><td id="m-lum-delta">—</td></tr>
-            <tr><td>Flash Frequency (Hz)</td><td id="m-flash-freq">—</td></tr>
-            <tr><td>2D FFT Spectral Ratio</td><td id="m-spectral">—</td></tr>
-            <tr><td>Screen Area Impact</td><td id="m-area">—</td></tr>
-          </table>
-        </div>
-
-        <!-- Section 2: Synaptic Shield Narrative Context -->
-        <div class="card">
-          <div class="card-header">
-            <span>2. Synaptic Narrative Context</span>
-            <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick="groundContext()">Ground Dialogue</button>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Grounded Context Note</label>
-            <textarea class="form-control" id="input-context-text" placeholder="Click 'Ground Dialogue' or enter editorial override text..."></textarea>
-          </div>
-          <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
-            <input type="checkbox" id="check-context-approved" style="width: auto;">
-            <label for="check-context-approved" style="font-size: 12px; cursor: pointer; color: var(--text-primary);">Editorially approved for narrative banner</label>
-          </div>
-          <button class="btn btn-secondary btn-full" onclick="approveContext()">Save Context Approval</button>
-          <div id="context-feedback" class="inline-feedback-banner"></div>
-        </div>
-
-        <!-- Section 3: Human Editorial Review Gate -->
-        <div class="card">
-          <div class="card-header">
-            <span>3. Human Review Gate</span>
-            <span style="font-size: 10px; color: var(--bronze);">Mandatory Gate</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Reviewer ID</label>
-            <input type="text" class="form-control" id="input-reviewer-id" value="editor-chief-carla">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Editorial Decision</label>
-            <select class="form-control" id="select-editorial-decision">
-              <option value="approved">Approved for Release</option>
-              <option value="rejected">Rejected (Hazard Blocked)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Sign-off Notes</label>
-            <input type="text" class="form-control" id="input-review-notes" value="Hazard interval reviewed and approved with Synaptic Shield intervention.">
-          </div>
-          <button class="btn btn-bronze btn-full" onclick="submitReview()">Commit Review Decision</button>
-          <div id="review-feedback" class="inline-feedback-banner"></div>
-        </div>
-
-        <!-- Section 4: Cryptographic Release Publisher -->
-        <div class="card">
-          <div class="card-header">
-            <span>4. Cryptographic Packaging</span>
-            <span class="status-tag tag-unscreened" id="pub-status-tag">Unpublished</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Rendition Set ID</label>
-            <input type="text" class="form-control" id="input-rendition-id" value="hls-1080p-demo">
-          </div>
-          <button class="btn btn-bronze btn-full" id="btn-publish-release" onclick="publishRelease()" disabled>Sign & Publish Ed25519 Sidecar</button>
-          <div id="publish-feedback" class="inline-feedback-banner"></div>
-
-          <div id="published-release-details" style="display: none; margin-top: 12px;">
-            <div class="form-label" style="color: var(--bronze);">Published Release Bundle</div>
-            <div class="code-snippet tabular-nums" id="pub-release-id-box"></div>
-            <div class="form-label" style="margin-top: 8px;">Android TV Intent Command</div>
-            <div class="code-snippet tabular-nums" id="pub-intent-cmd-box" style="font-size: 10px;"></div>
-            <div style="display: flex; gap: 6px; margin-top: 8px;">
-              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="copyIntentCmd()">Copy Command</button>
-              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="downloadSidecar()">Sidecar JSON</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-  </div>
-
-  <!-- VIEW 2: FireTrace Incident Lab -->
-  <div id="view-firetrace" class="view-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <div>
-        <h2 style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #fff;">FireTrace Recovery Incident Lab</h2>
-        <p style="color: var(--text-secondary); font-size: 12px;">Post-Incident Forensics, Deterministic Retest Harness & EviRCA Advisory</p>
-      </div>
-      <button class="btn btn-secondary" onclick="loadIncidents()">Refresh Incidents</button>
-    </div>
-
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Incident ID</th>
-            <th>Diagnostic Code</th>
-            <th>Recovery Status</th>
-            <th>Mismatch Fields</th>
-            <th>Position Drift</th>
-            <th>Retest Fixture</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="incidents-table-body">
-          <!-- Rendered dynamically -->
-        </tbody>
-      </table>
-    </div>
-
-    <div id="incident-detail-panel" style="display: none;" class="card">
-      <div class="card-header">
-        <span id="detail-incident-title">Incident Deep Dive</span>
-        <button class="btn btn-bronze" onclick="runRetestOnActiveIncident()">Run Deterministic Retest</button>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div>
-          <div class="form-label">Receipt Digest</div>
-          <div class="code-snippet tabular-nums" id="detail-receipt-digest"></div>
-          <div class="form-label" style="margin-top: 10px;">Retest Execution Trace</div>
-          <div class="code-snippet tabular-nums" id="detail-retest-trace" style="height: 120px;"></div>
-        </div>
-
-        <div>
-          <div class="form-label">EviRCA Advisory Diagnosis</div>
-          <div id="detail-advisory-box" style="background: var(--stage-bg); border: 1px solid var(--stage-border); padding: 12px; border-radius: 4px; font-size: 12px;">
-            <div id="advisory-hypotheses" style="color: #cbd5e1; margin-bottom: 8px;"></div>
-            <div id="advisory-next-check" style="color: var(--bronze); font-weight: 600;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- VIEW 3: Ed25519 Sidecar Registry -->
-  <div id="view-releases" class="view-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-      <div>
-        <h2 style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #fff;">Cryptographic Release Registry</h2>
-        <p style="color: var(--text-secondary); font-size: 12px;">Immutable Asymmetric Ed25519 v2 Sidecar Contracts</p>
-      </div>
-      <button class="btn btn-secondary" onclick="loadReleases()">Refresh Releases</button>
-    </div>
-
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Release ID</th>
-            <th>Rendition Set</th>
-            <th>Manifest Digest</th>
-            <th>Key ID / Alg</th>
-            <th>Notes Count</th>
-            <th>Published Time</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="releases-table-body">
-          <!-- Rendered dynamically -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Modal: Ingest Managed Asset -->
-  <div class="modal-overlay" id="import-modal">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <span class="modal-title">Ingest Managed Asset</span>
-        <button class="btn-icon" onclick="closeImportModal()">&times;</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Asset Name</label>
-        <input type="text" class="form-control" id="modal-ast-name" placeholder="e.g. Broadcast Episode 104 Cut">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Source Path (Workspace-Confined)</label>
-        <input type="text" class="form-control" id="modal-ast-path" placeholder="e.g. data/catalog/sample.ts">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Raw Media Bytes (Optional Hex or ASCII)</label>
-        <input type="text" class="form-control" id="modal-ast-bytes" placeholder="Enter byte data if importing raw memory buffer">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Subtitles (WebVTT Content)</label>
-        <textarea class="form-control" id="modal-ast-vtt" placeholder="WEBVTT&#10;&#10;00:00.000 --> 00:02.000&#10;Emergency warning strobe active."></textarea>
-      </div>
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-        <button class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
-        <button class="btn btn-bronze" onclick="submitImportAsset()">Register Asset</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Application Frontend Logic -->
-  <script>
-    // State
-    const API_BASE = "";
-    const TENANT_ID = "publisher-demo-tenant";
-    let assets = [];
-    let selectedAsset = null;
-    let currentReport = null;
-    let selectedFinding = null;
-    let activeRelease = null;
-    let incidents = [];
-    let activeIncident = null;
-
-    // Player State
-    let isPlaying = false;
-    let currentPositionMs = 0;
-    let animationFrameId = null;
-    let lastTickTime = 0;
-
-    // Init
-    window.addEventListener("DOMContentLoaded", () => {
-      fetchHealth();
-      loadAssets();
-      loadIncidents();
-      initCanvas();
-    });
-
-    // Navigation Switcher
-    function switchView(viewName) {
-      document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
-      event.target.classList.add("active");
-
-      document.getElementById("view-clearance").style.display = (viewName === "clearance") ? "flex" : "none";
-      document.getElementById("view-firetrace").style.display = (viewName === "firetrace") ? "block" : "none";
-      document.getElementById("view-releases").style.display = (viewName === "releases") ? "block" : "none";
-
-      if (viewName === "releases") loadReleases();
-      if (viewName === "firetrace") loadIncidents();
-    }
-
-    // Health
-    function setFeedback(elementId, message, type = "info") {
-      const el = document.getElementById(elementId);
-      if (!el) return;
-      el.textContent = message;
-      el.className = `inline-feedback-banner feedback-${type}`;
-      el.style.display = message ? "block" : "none";
-    }
-
-    async function fetchHealth() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/health`);
-        const data = await resp.json();
-        const mode = data.environment_mode ? data.environment_mode.replace(/_/g, " ") : "local";
-        document.getElementById("engine-health-pill").textContent = `Engine: ${data.status} · ${mode}`;
-      } catch (e) {
-        document.getElementById("engine-health-pill").textContent = "Engine: Offline";
-      }
-    }
-
-    // Assets Catalog
-    async function loadAssets() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/assets`);
-        const data = await resp.json();
-        assets = data.assets || [];
-        renderAssetList();
-        if (assets.length > 0 && !selectedAsset) {
-          selectAsset(assets[0].asset_id);
-        }
-      } catch (e) {
-        console.error("Failed to load assets", e);
-      }
-    }
-
-    function renderAssetList() {
-      const container = document.getElementById("asset-list-container");
-      container.innerHTML = "";
-
-      assets.forEach(ast => {
-        const el = document.createElement("div");
-        el.className = `asset-item ${selectedAsset && selectedAsset.asset_id === ast.asset_id ? "selected" : ""}`;
-        el.onclick = () => selectAsset(ast.asset_id);
-
-        let tagClass = "tag-unscreened";
-        let tagText = "Unscreened";
-        if (ast.has_screening) {
-          if (ast.review_state === "approved") {
-            tagClass = "tag-approved";
-            tagText = "Approved";
-          } else if (ast.review_state === "rejected") {
-            tagClass = "tag-rejected";
-            tagText = "Rejected";
-          } else if (ast.findings_count === 0) {
-            tagClass = "tag-clean";
-            tagText = "Clean";
-          } else {
-            tagClass = "tag-hazard";
-            tagText = "Hazard";
-          }
-        }
-
-        el.innerHTML = `
-          <div class="asset-item-title">${escapeHtml(ast.name)}</div>
-          <div class="asset-item-meta">
-            <span class="tabular-nums">${Math.round(ast.duration_ms / 1000)}s &bull; ${ast.fps} fps</span>
-            <span class="status-tag ${tagClass}">${tagText}</span>
-          </div>
-        `;
-        container.appendChild(el);
-      });
-    }
-
-    async function selectAsset(assetId) {
-      selectedAsset = assets.find(a => a.asset_id === assetId);
-      currentReport = null;
-      selectedFinding = null;
-      renderAssetList();
-
-      currentPositionMs = 0;
-      updatePlayheadVisuals();
-      renderFrameCanvas();
-
-      // Check if already screened
-      if (selectedAsset.has_screening) {
-        await loadReport(selectedAsset.asset_revision_id);
-      } else {
-        renderUnscreenedInspector();
-      }
-
-      renderTimeline();
-    }
-
-    async function loadReport(revisionId) {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/screening/reports/${encodeURIComponent(revisionId)}`);
-        if (resp.ok) {
-          currentReport = await resp.json();
-          renderScreenedInspector();
-        } else {
-          renderUnscreenedInspector();
-        }
-      } catch (e) {
-        renderUnscreenedInspector();
-      }
-      renderTimeline();
-    }
-
-    async function triggerScreening() {
-      if (!selectedAsset) return;
-      const btn = document.getElementById("btn-run-screening");
-      btn.disabled = true;
-      btn.textContent = "Screening Frames...";
-      setFeedback("screening-feedback", "Submitting asynchronous screening job...", "info");
-
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/screening/jobs`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ asset_id: selectedAsset.asset_id, wait: false })
-        });
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          setFeedback("screening-feedback", `Screening job creation failed: ${err.error || resp.statusText}`, "error");
-          btn.disabled = false;
-          btn.textContent = "Run Screening";
-          return;
-        }
-        const job = await resp.json();
-        const jobId = job.job_id;
-        setFeedback("screening-feedback", `Screening job ${jobId} running...`, "info");
-
-        const pollInterval = setInterval(async () => {
-          try {
-            const jResp = await fetch(`${API_BASE}/api/v1/screening/jobs/${jobId}`);
-            if (jResp.ok) {
-              const currentJob = await jResp.json();
-              if (currentJob.status === "COMPLETED") {
-                clearInterval(pollInterval);
-                setFeedback("screening-feedback", `✓ Screening completed (${currentJob.findings_count} findings detected)`, "success");
-                btn.disabled = false;
-                btn.textContent = "Run Screening";
-                await loadAssets();
-                await selectAsset(selectedAsset.asset_id);
-              } else if (currentJob.status === "FAILED") {
-                clearInterval(pollInterval);
-                setFeedback("screening-feedback", `Screening failed: ${currentJob.error_message || "Unknown error"}`, "error");
-                btn.disabled = false;
-                btn.textContent = "Run Screening";
-              }
-            }
-          } catch (pe) {
-            // keep polling
-          }
-        }, 500);
-      } catch (e) {
-        setFeedback("screening-feedback", `Screening network error: ${e.message}`, "error");
-        btn.disabled = false;
-        btn.textContent = "Run Screening";
-      }
-    }
-
-    function renderUnscreenedInspector() {
-      document.getElementById("inspector-status-badge").className = "status-tag tag-unscreened";
-      document.getElementById("inspector-status-badge").textContent = "Unscreened";
-      document.getElementById("card-hazard-tag").textContent = "No Data";
-      document.getElementById("m-window").textContent = "—";
-      document.getElementById("m-duration").textContent = "—";
-      document.getElementById("m-lum-delta").textContent = "—";
-      document.getElementById("m-flash-freq").textContent = "—";
-      document.getElementById("m-spectral").textContent = "—";
-      document.getElementById("m-area").textContent = "—";
-      document.getElementById("input-context-text").value = "";
-      document.getElementById("check-context-approved").checked = false;
-      document.getElementById("btn-publish-release").disabled = true;
-      document.getElementById("pub-status-tag").textContent = "Unpublished";
-      document.getElementById("published-release-details").style.display = "none";
-    }
-
-    function renderScreenedInspector() {
-      if (!currentReport) return;
-
-      const findings = currentReport.findings || [];
-      const hasHazards = findings.length > 0;
-
-      document.getElementById("inspector-status-badge").className =
-        currentReport.review_state === "approved" ? "status-tag tag-approved" :
-        currentReport.review_state === "rejected" ? "status-tag tag-rejected" : "status-tag tag-hazard";
-      document.getElementById("inspector-status-badge").textContent = currentReport.review_state.toUpperCase();
-
-      if (hasHazards) {
-        selectedFinding = findings[0];
-        document.getElementById("card-hazard-tag").className = "status-tag tag-hazard";
-        document.getElementById("card-hazard-tag").textContent = selectedFinding.types.join(", ");
-        document.getElementById("m-window").textContent = `${selectedFinding.start_ms} ms → ${selectedFinding.end_ms} ms`;
-        document.getElementById("m-duration").textContent = `${selectedFinding.end_ms - selectedFinding.start_ms} ms (Safe resume: ${selectedFinding.proposed_safe_resume_ms} ms)`;
-
-        const m = selectedFinding.metrics || {};
-        document.getElementById("m-lum-delta").textContent = (m.max_luminance_delta !== undefined) ? String(m.max_luminance_delta) : "Not measured";
-        document.getElementById("m-flash-freq").textContent = (m.peak_luminance_flashes_per_sec !== undefined) ? `${m.peak_luminance_flashes_per_sec} Hz` : "Not measured";
-        document.getElementById("m-spectral").textContent = (m.max_spectral_concentration !== undefined) ? String(m.max_spectral_concentration) : "Not measured";
-        document.getElementById("m-area").textContent = (m.max_affected_area_fraction !== undefined) ? `${Math.round(m.max_affected_area_fraction * 100)}%` : "Not measured";
-      } else {
-        selectedFinding = null;
-        document.getElementById("card-hazard-tag").className = "status-tag tag-clean";
-        document.getElementById("card-hazard-tag").textContent = "CLEAN / 0 FINDINGS";
-        document.getElementById("m-window").textContent = "No hazard intervals detected";
-        document.getElementById("m-duration").textContent = "Full clip safe for broadcast";
-        document.getElementById("m-lum-delta").textContent = "0.000";
-        document.getElementById("m-flash-freq").textContent = "0.0 Hz";
-        document.getElementById("m-spectral").textContent = "0.000";
-        document.getElementById("m-area").textContent = "0%";
-      }
-
-      // Check context notes
-      const notes = currentReport.context_notes || [];
-      if (notes.length > 0) {
-        document.getElementById("input-context-text").value = notes[0].text;
-        document.getElementById("check-context-approved").checked = notes[0].editorial_approved;
-      } else {
-        document.getElementById("input-context-text").value = "";
-        document.getElementById("check-context-approved").checked = false;
-      }
-
-      // Update publishing button enabled state
-      document.getElementById("btn-publish-release").disabled = (currentReport.review_state !== "approved");
-    }
-
-    // Context Actions
-    async function groundContext() {
-      if (!selectedAsset || !selectedFinding) return;
-      setFeedback("context-feedback", "Grounding dialogue from source cues...", "info");
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/context/ground`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            asset_revision_id: selectedAsset.asset_revision_id,
-            interval_id: selectedFinding.interval_id,
-            method: "extractive_subtitles"
-          })
-        });
-        if (resp.ok) {
-          const note = await resp.json();
-          document.getElementById("input-context-text").value = note.text;
-          setFeedback("context-feedback", `✓ Grounded cues: ${note.source_cue_ids ? note.source_cue_ids.join(", ") : "dialogue excerpt"}`, "success");
-        } else {
-          const err = await resp.json().catch(() => ({}));
-          setFeedback("context-feedback", `Dialogue grounding failed: ${err.error || resp.statusText}`, "error");
-        }
-      } catch (e) {
-        setFeedback("context-feedback", `Grounding network error: ${e.message}`, "error");
-      }
-    }
-
-    async function approveContext() {
-      if (!selectedAsset || !selectedFinding) return;
-      const text = document.getElementById("input-context-text").value.trim();
-      const approved = document.getElementById("check-context-approved").checked;
-      if (!approved) {
-        setFeedback("context-feedback", "Please check 'Editorially approved for narrative banner' before saving approval.", "warning");
-        return;
-      }
-      if (!text) {
-        setFeedback("context-feedback", "Context text cannot be empty. Ground dialogue or enter notes.", "warning");
-        return;
-      }
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/context/approve`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            asset_revision_id: selectedAsset.asset_revision_id,
-            interval_id: selectedFinding.interval_id,
-            reviewer_id: document.getElementById("input-reviewer-id").value,
-            text: text
-          })
-        });
-        if (resp.ok) {
-          setFeedback("context-feedback", `✓ Narrative context approved and bound to interval ${selectedFinding.interval_id}`, "success");
-          await loadReport(selectedAsset.asset_revision_id);
-        } else {
-          const err = await resp.json().catch(() => ({}));
-          setFeedback("context-feedback", `Approval rejected: ${err.error || resp.statusText} (Ensure cues are grounded first)`, "error");
-        }
-      } catch (e) {
-        setFeedback("context-feedback", `Error saving context approval: ${e.message}`, "error");
-      }
-    }
-
-    // Editorial Review Actions
-    async function submitReview() {
-      if (!selectedAsset || !currentReport) return;
-      const decision = document.getElementById("select-editorial-decision").value;
-      const reviewer = document.getElementById("input-reviewer-id").value;
-      const notes = document.getElementById("input-review-notes").value;
-      setFeedback("review-feedback", "Submitting editorial decision...", "info");
-
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/screening/reports/${encodeURIComponent(selectedAsset.asset_revision_id)}/review`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reviewer_id: reviewer,
-            decision: decision,
-            notes: notes
-          })
-        });
-        if (resp.ok) {
-          setFeedback("review-feedback", `✓ Editorial decision committed: ${decision.toUpperCase()}`, "success");
-          await loadAssets();
-          await selectAsset(selectedAsset.asset_id);
-        } else {
-          const err = await resp.json().catch(() => ({}));
-          setFeedback("review-feedback", `Review submission rejected: ${err.error || resp.statusText}`, "error");
-        }
-      } catch (e) {
-        setFeedback("review-feedback", `Review submission error: ${e.message}`, "error");
-      }
-    }
-
-    // Publication Actions
-    async function publishRelease() {
-      if (!selectedAsset || !currentReport) return;
-      const renditionId = document.getElementById("input-rendition-id").value;
-      const btn = document.getElementById("btn-publish-release");
-      btn.disabled = true;
-      btn.textContent = "Signing Ed25519 Sidecar...";
-
-      try {
-        const hlsManifest = "#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:3\n#EXTINF:3.0,\nseg0.ts\n#EXT-X-ENDLIST\n";
-        const resp = await fetch(`${API_BASE}/api/v1/releases/publish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            asset_revision_id: selectedAsset.asset_revision_id,
-            rendition_set_id: renditionId,
-            playlist_manifest: hlsManifest,
-            media_uri: "asset:///hls/variant_1080p.m3u8"
-          })
-        });
-        if (resp.ok) {
-          activeRelease = await resp.json();
-          document.getElementById("pub-status-tag").className = "status-tag tag-published";
-          document.getElementById("pub-status-tag").textContent = "PUBLISHED";
-          document.getElementById("published-release-details").style.display = "block";
-          document.getElementById("pub-release-id-box").textContent = `Release ID: ${activeRelease.release_id}\nDigest: ${activeRelease.manifest_digest}\nKey: ${activeRelease.key_id} (Ed25519)`;
-          document.getElementById("pub-intent-cmd-box").textContent = activeRelease.harness_intent_command;
-          alert("Release successfully signed and published with Ed25519 v2 sidecar!");
-        } else {
-          const err = await resp.json();
-          alert(`Publication blocked: ${err.error}`);
-        }
-      } catch (e) {
-        alert("Publication network error");
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Sign & Publish Ed25519 Sidecar";
-      }
-    }
-
-    function copyIntentCmd() {
-      if (!activeRelease) return;
-      navigator.clipboard.writeText(activeRelease.harness_intent_command);
-      alert("Android TV launch command copied to clipboard!");
-    }
-
-    function downloadSidecar() {
-      if (!activeRelease) return;
-      const blob = new Blob([activeRelease.sidecar_json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${activeRelease.release_id}-sidecar.json`;
-      a.click();
-    }
-
-    function parseVttCues(vttText) {
-      if (!vttText) return [];
-      const cues = [];
-      const lines = vttText.split(/\r?\n/);
-      const timeRegex = /(?:(\d{2}):)?(\d{2}):(\d{2})[.,](\d{3})\s*-->\s*(?:(\d{2}):)?(\d{2}):(\d{2})[.,](\d{3})/;
-      let i = 0;
-      while (i < lines.length) {
-        const line = lines[i].trim();
-        const m = line.match(timeRegex);
-        if (m) {
-          const h1 = parseInt(m[1] || "0", 10);
-          const m1 = parseInt(m[2], 10);
-          const s1 = parseInt(m[3], 10);
-          const ms1 = parseInt(m[4], 10);
-          const startMs = (h1 * 3600 + m1 * 60 + s1) * 1000 + ms1;
-
-          const h2 = parseInt(m[5] || "0", 10);
-          const m2 = parseInt(m[6], 10);
-          const s2 = parseInt(m[7], 10);
-          const ms2 = parseInt(m[8], 10);
-          const endMs = (h2 * 3600 + m2 * 60 + s2) * 1000 + ms2;
-
-          let text = "";
-          let j = i + 1;
-          while (j < lines.length && lines[j].trim() && !lines[j].includes("-->")) {
-            text += (text ? " " : "") + lines[j].trim();
-            j++;
-          }
-          cues.push({ startMs, endMs, text });
-          i = j;
-        } else {
-          i++;
-        }
-      }
-      return cues;
-    }
-
-    // Timeline Rendering & Scrubbing
-    function renderTimeline() {
-      if (!selectedAsset) return;
-      const durationMs = selectedAsset.duration_ms || 2000;
-      document.getElementById("timeline-scale-label").textContent = `Duration: ${durationMs} ms`;
-
-      // Ruler
-      const rulerTrack = document.getElementById("timeline-ruler-track");
-      rulerTrack.innerHTML = "";
-      const stepMs = durationMs <= 5000 ? 500 : (durationMs <= 30000 ? 5000 : 20000);
-      for (let t = 0; t <= durationMs; t += stepMs) {
-        const pct = (t / durationMs) * 100;
-        const tick = document.createElement("div");
-        tick.className = "ruler-tick";
-        tick.style.left = `${pct}%`;
-        const label = document.createElement("div");
-        label.className = "ruler-label tabular-nums";
-        label.style.left = `${pct}%`;
-        label.textContent = `${(t / 1000).toFixed(1)}s`;
-        rulerTrack.appendChild(tick);
-        rulerTrack.appendChild(label);
-      }
-
-      // Hazards Track
-      const hazardTrack = document.getElementById("track-hazards");
-      hazardTrack.querySelectorAll(".timeline-hazard-block, .timeline-safe-margin").forEach(el => el.remove());
-
-      if (currentReport && currentReport.findings) {
-        currentReport.findings.forEach(f => {
-          const leftPct = (f.start_ms / durationMs) * 100;
-          const widthPct = ((f.end_ms - f.start_ms) / durationMs) * 100;
-          const marginWidthPct = ((f.proposed_safe_resume_ms - f.end_ms) / durationMs) * 100;
-
-          // Hazard block
-          const block = document.createElement("div");
-          block.className = `timeline-hazard-block ${selectedFinding && selectedFinding.interval_id === f.interval_id ? "active" : ""}`;
-          block.style.left = `${leftPct}%`;
-          block.style.width = `${Math.max(1, widthPct)}%`;
-          block.title = `${f.interval_id}: ${f.types.join(", ")} (${f.start_ms}ms - ${f.end_ms}ms)`;
-          block.onclick = (e) => {
-            e.stopPropagation();
-            selectedFinding = f;
-            seekToMs(f.start_ms);
-            renderTimeline();
-          };
-          hazardTrack.appendChild(block);
-
-          // Safe margin
-          if (marginWidthPct > 0) {
-            const margin = document.createElement("div");
-            margin.className = "timeline-safe-margin";
-            margin.style.left = `${leftPct + widthPct}%`;
-            margin.style.width = `${marginWidthPct}%`;
-            hazardTrack.appendChild(margin);
-          }
-        });
-      }
-
-      // Subtitles Track (Grounded from actual VTT cues)
-      const subTrack = document.getElementById("track-subtitles");
-      subTrack.querySelectorAll(".timeline-subtitle-block").forEach(el => el.remove());
-      const vttCues = parseVttCues(selectedAsset ? selectedAsset.subtitles_vtt : "");
-      if (vttCues.length > 0) {
-        vttCues.forEach(cue => {
-          if (cue.endMs > cue.startMs && durationMs > 0) {
-            const leftPct = (cue.startMs / durationMs) * 100;
-            const widthPct = Math.max(1.5, ((cue.endMs - cue.startMs) / durationMs) * 100);
-            const subBlock = document.createElement("div");
-            subBlock.className = "timeline-subtitle-block";
-            subBlock.style.left = `${leftPct}%`;
-            subBlock.style.width = `${widthPct}%`;
-            subBlock.textContent = cue.text;
-            subBlock.title = `${cue.startMs}ms - ${cue.endMs}ms: ${cue.text}`;
-            subTrack.appendChild(subBlock);
-          }
-        });
-      }
-    }
-
-    function onTimelineClick(e) {
-      if (!selectedAsset) return;
-      const rect = document.getElementById("timeline-viewport").getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const pct = Math.max(0, Math.min(1, clickX / rect.width));
-      const targetMs = Math.round(pct * selectedAsset.duration_ms);
-      seekToMs(targetMs);
-    }
-
-    function seekToMs(ms) {
-      if (!selectedAsset) return;
-      currentPositionMs = Math.max(0, Math.min(selectedAsset.duration_ms, ms));
-      updatePlayheadVisuals();
-      renderFrameCanvas();
-    }
-
-    function stepFrame(delta) {
-      if (!selectedAsset) return;
-      const frameDurationMs = 1000 / (selectedAsset.fps || 30);
-      seekToMs(currentPositionMs + (delta * frameDurationMs));
-    }
-
-    function jumpToHazard() {
-      if (currentReport && currentReport.findings && currentReport.findings.length > 0) {
-        seekToMs(currentReport.findings[0].start_ms);
-      }
-    }
-
-    function togglePlayback() {
-      isPlaying = !isPlaying;
-      document.getElementById("play-pause-btn").textContent = isPlaying ? "⏸" : "▶";
-      if (isPlaying) {
-        lastTickTime = performance.now();
-        animationFrameId = requestAnimationFrame(playbackLoop);
-      } else {
-        cancelAnimationFrame(animationFrameId);
-      }
-    }
-
-    function playbackLoop(now) {
-      if (!isPlaying || !selectedAsset) return;
-      const elapsed = now - lastTickTime;
-      lastTickTime = now;
-      currentPositionMs += elapsed;
-
-      if (currentPositionMs >= selectedAsset.duration_ms) {
-        currentPositionMs = 0;
-      }
-
-      updatePlayheadVisuals();
-      renderFrameCanvas();
-      animationFrameId = requestAnimationFrame(playbackLoop);
-    }
-
-    function updatePlayheadVisuals() {
-      if (!selectedAsset) return;
-      const pct = (currentPositionMs / (selectedAsset.duration_ms || 1)) * 100;
-      document.getElementById("timeline-playhead").style.left = `${pct}%`;
-
-      // Timecode HUD
-      const s = Math.floor(currentPositionMs / 1000);
-      const ms = Math.floor(currentPositionMs % 1000);
-      const frames = Math.floor((ms / 1000) * (selectedAsset.fps || 30));
-      const tc = `00:00:${String(s).padStart(2, '0')}:${String(frames).padStart(2, '0')}`;
-      document.getElementById("hud-timecode").textContent = tc;
-      document.getElementById("transport-timecode").textContent = `${Math.round(currentPositionMs)} ms / ${selectedAsset.duration_ms} ms`;
-
-      // Active hazard check
-      let inHazard = false;
-      if (currentReport && currentReport.findings) {
-        inHazard = currentReport.findings.some(f => currentPositionMs >= f.start_ms && currentPositionMs <= f.end_ms);
-      }
-      document.getElementById("hud-hazard-pill").style.display = inHazard ? "block" : "none";
-
-      // Subtitle check from actual VTT cues or grounded context note
-      let activeSubText = "";
-      const vttCues = parseVttCues(selectedAsset ? selectedAsset.subtitles_vtt : "");
-      const activeCue = vttCues.find(c => currentPositionMs >= c.startMs && currentPositionMs <= c.endMs);
-      if (activeCue) {
-        activeSubText = activeCue.text;
-      } else if (inHazard && currentReport && currentReport.context_notes && currentReport.context_notes.length > 0) {
-        const note = currentReport.context_notes.find(n => n.interval_id === inHazard.interval_id);
-        if (note && note.text) {
-          activeSubText = `[Narrative Context: ${note.text}]`;
-        }
-      }
-      document.getElementById("hud-subtitle").textContent = activeSubText;
-    }
-
-    // Frame Canvas Simulation
-    function initCanvas() {
-      renderFrameCanvas();
-    }
-
-    function renderFrameCanvas() {
-      const canvas = document.getElementById("preview-canvas");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#0d1017";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = "600 13px -apple-system, sans-serif";
-      ctx.textAlign = "center";
-
-      if (selectedAsset) {
-        ctx.fillText(`Selected Asset: ${selectedAsset.name}`, canvas.width / 2, canvas.height / 2 - 12);
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "12px -apple-system, sans-serif";
-        ctx.fillText("Media preview unavailable · Safe static display", canvas.width / 2, canvas.height / 2 + 12);
-        ctx.fillText("Deterministic findings and metrics rendered in inspector below", canvas.width / 2, canvas.height / 2 + 32);
-      } else {
-        ctx.fillText("Select an asset from the catalog rail to inspect", canvas.width / 2, canvas.height / 2);
-      }
-    }
-
-    // Incidents Lab View
-    async function loadIncidents() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/incidents`);
-        const data = await resp.json();
-        incidents = data.incidents || [];
-        renderIncidentsTable();
-      } catch (e) {
-        console.error("Failed to load incidents", e);
-      }
-    }
-
-    function renderIncidentsTable() {
-      const tbody = document.getElementById("incidents-table-body");
-      tbody.innerHTML = "";
-
-      incidents.forEach(inc => {
-        const rec = inc.receipt || {};
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="tabular-nums" style="font-weight: 700; color: #fff;">${escapeHtml(inc.incident_id)}</td>
-          <td><span class="status-tag tag-rejected">${escapeHtml(rec.diagnostic_code || "UNKNOWN")}</span></td>
-          <td><span class="status-tag tag-hazard">${escapeHtml(rec.recovery_status || "UNKNOWN")}</span></td>
-          <td class="tabular-nums">${(rec.mismatch_fields || []).join(", ")}</td>
-          <td class="tabular-nums">${rec.position_delta_ms ?? 0} ms</td>
-          <td>${escapeHtml(rec.retest_fixture_id || "STANDARD")}</td>
-          <td><button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="viewIncidentDetail('${inc.incident_id}')">Investigate</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function viewIncidentDetail(incidentId) {
-      activeIncident = incidents.find(i => i.incident_id === incidentId);
-      if (!activeIncident) return;
-
-      document.getElementById("incident-detail-panel").style.display = "block";
-      document.getElementById("detail-incident-title").textContent = `Incident Investigation: ${activeIncident.incident_id}`;
-      document.getElementById("detail-receipt-digest").textContent = activeIncident.receipt_digest || "sha256:...";
-
-      // Load advisory
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/incidents/${incidentId}/advisory`);
-        const adv = await resp.json();
-        const hyp = (adv.labeled_hypotheses || []).map(h => `&bull; ${escapeHtml(h)}`).join("<br>");
-        document.getElementById("advisory-hypotheses").innerHTML = `<strong>Root Cause Hypotheses:</strong><br>${hyp}`;
-        document.getElementById("advisory-next-check").textContent = `Allowable Next Action: ${adv.permitted_next_check}`;
-      } catch (e) {
-        document.getElementById("advisory-hypotheses").textContent = "Advisory unavailable";
-      }
-    }
-
-    async function runRetestOnActiveIncident() {
-      if (!activeIncident) return;
-      const traceBox = document.getElementById("detail-retest-trace");
-      traceBox.textContent = "Executing deterministic retest simulation...";
-
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/incidents/${activeIncident.incident_id}/retest`, { method: "POST" });
-        const res = await resp.json();
-        traceBox.textContent = `[PASS] Retest Status: ${res.test_status}\nResult: ${res.verification_result}\nDetail: ${res.detail}\nTimestamp: ${res.executed_at_iso}`;
-      } catch (e) {
-        traceBox.textContent = "Retest execution failed";
-      }
-    }
-
-    // Releases Registry View
-    async function loadReleases() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/v1/releases`);
-        const data = await resp.json();
-        renderReleasesTable(data.releases || []);
-      } catch (e) {
-        console.error("Failed to load releases", e);
-      }
-    }
-
-    function renderReleasesTable(releases) {
-      const tbody = document.getElementById("releases-table-body");
-      tbody.innerHTML = "";
-
-      releases.forEach(rel => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="tabular-nums" style="font-weight: 700; color: var(--bronze);">${escapeHtml(rel.release_id)}</td>
-          <td>${escapeHtml(rel.rendition_set_id)}</td>
-          <td class="tabular-nums">${escapeHtml(rel.manifest_digest.slice(0, 24))}...</td>
-          <td><span class="status-tag tag-clean">${escapeHtml(rel.signing_alg)}</span> ${escapeHtml(rel.key_id)}</td>
-          <td class="tabular-nums">${rel.context_notes_count}</td>
-          <td class="tabular-nums">${escapeHtml(rel.published_at_iso)}</td>
-          <td><button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="downloadReleaseSidecar('${rel.release_id}')">Sidecar JSON</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function downloadReleaseSidecar(releaseId) {
-      window.open(`${API_BASE}/api/v1/releases/${releaseId}/sidecar.json`, "_blank");
-    }
-
-    // Ingest Modal
-    function openImportModal() { document.getElementById("import-modal").style.display = "flex"; }
-    function closeImportModal() { document.getElementById("import-modal").style.display = "none"; }
-
-    async function submitImportAsset() {
-      const name = document.getElementById("modal-ast-name").value;
-      const path = document.getElementById("modal-ast-path").value;
-      const bytes = document.getElementById("modal-ast-bytes").value;
-      const vtt = document.getElementById("modal-ast-vtt").value;
-
-      if (!name) { alert("Asset name is required"); return; }
-
-      try {
-        const payload = {
-          name: name,
-          source_type: path ? "managed_video" : "synthetic_fixture",
-          source_path: path || null,
-          raw_bytes: bytes || "fixture-dummy-bytes",
-          subtitles_vtt: vtt || null
-        };
-        const resp = await fetch(`${API_BASE}/api/v1/assets`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        if (resp.ok) {
-          closeImportModal();
-          await loadAssets();
-          alert("Asset registered successfully!");
-        } else {
-          const err = await resp.json();
-          alert(`Import rejected: ${err.error}`);
-        }
-      } catch (e) {
-        alert("Failed to register asset");
-      }
-    }
-
-    function escapeHtml(str) {
-      return String(str || "").replace(/[&<>"']/g, m => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-      }[m]));
-    }
-  </script>
-</body>
-</html>
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>FireShield — Broadcast Standards & Continuous Recovery Suite</title>
+
+  <style>
+
+    :root {
+
+      /* Neutral Graphite Stage (Film QC Darkroom) */
+
+      --stage-bg: #0d1017;
+
+      --stage-surface: #131722;
+
+      --stage-panel: #181e2b;
+
+      --stage-border: #222a3a;
+
+      --stage-border-bright: #313d52;
+
+      /* Warm Ivory & Parchment Accents */
+
+      --ivory-card: #151a24;
+
+      --ivory-border: #2d3647;
+
+      --ivory-text: #f8fafc;
+
+      --ivory-muted: #94a3b8;
+
+      /* Typography & Ink */
+
+      --text-primary: #f1f5f9;
+
+      --text-secondary: #94a3b8;
+
+      --text-tertiary: #64748b;
+
+      --text-ink: #0f172a;
+
+      /* Authority & Verification: Muted Bronze / Aged Brass */
+
+      --bronze: #c89b3c;
+
+      --bronze-hover: #dfa837;
+
+      --bronze-dark: #8e6822;
+
+      --bronze-subtle: rgba(200, 155, 60, 0.12);
+
+      --bronze-border: rgba(200, 155, 60, 0.35);
+
+      /* Semantic Status Tokens */
+
+      --clean: #10b981;
+
+      --clean-subtle: rgba(16, 185, 129, 0.12);
+
+      --clean-border: rgba(16, 185, 129, 0.3);
+
+      --hazard: #f59e0b;
+
+      --hazard-subtle: rgba(245, 158, 11, 0.14);
+
+      --hazard-border: rgba(245, 158, 11, 0.35);
+
+      --rejected: #ef4444;
+
+      --rejected-subtle: rgba(239, 68, 68, 0.14);
+
+      --rejected-border: rgba(239, 68, 68, 0.35);
+
+      --published: #38bdf8;
+
+      --published-subtle: rgba(56, 189, 248, 0.12);
+
+      --published-border: rgba(56, 189, 248, 0.3);
+
+      /* Interactive Timeline */
+
+      --timeline-bg: #090b10;
+
+      --timeline-track: #151a24;
+
+      --timeline-ruler: #202735;
+
+      --timeline-playhead: #f59e0b;
+
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+
+      background: var(--stage-bg);
+
+      color: var(--text-primary);
+
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+      font-size: 13px;
+
+      line-height: 1.5;
+
+      min-height: 100vh;
+
+      overflow-x: hidden;
+
+    }
+
+    .tabular-nums {
+
+      font-variant-numeric: tabular-nums;
+
+      font-family: "JetBrains Mono", "SF Mono", Consolas, "Courier New", monospace;
+
+    }
+
+    /* Top App Navigation Bar */
+
+    header {
+
+      background: var(--stage-surface);
+
+      border-bottom: 1px solid var(--stage-border);
+
+      height: 56px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      padding: 0 20px;
+
+      position: sticky;
+
+      top: 0;
+
+      z-index: 100;
+
+    }
+
+    .brand-section {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 12px;
+
+    }
+
+    .brand-logo {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      width: 32px;
+
+      height: 32px;
+
+      background: var(--bronze-subtle);
+
+      border: 1px solid var(--bronze-border);
+
+      border-radius: 6px;
+
+      color: var(--bronze);
+
+      font-weight: 800;
+
+      font-size: 14px;
+
+    }
+
+    .brand-title {
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      letter-spacing: 0.06em;
+
+      text-transform: uppercase;
+
+      color: #fff;
+
+    }
+
+    .brand-subtitle {
+
+      font-size: 11px;
+
+      color: var(--text-secondary);
+
+      letter-spacing: 0.02em;
+
+    }
+
+    .nav-tabs {
+
+      display: flex;
+
+      gap: 6px;
+
+      background: var(--stage-bg);
+
+      padding: 3px;
+
+      border-radius: 6px;
+
+      border: 1px solid var(--stage-border);
+
+    }
+
+    .nav-tab {
+
+      padding: 6px 14px;
+
+      font-size: 12px;
+
+      font-weight: 600;
+
+      color: var(--text-secondary);
+
+      background: transparent;
+
+      border: none;
+
+      border-radius: 4px;
+
+      cursor: pointer;
+
+      transition: all 0.15s ease;
+
+    }
+
+    .nav-tab:hover {
+
+      color: var(--text-primary);
+
+    }
+
+    .nav-tab.active {
+
+      background: var(--stage-panel);
+
+      color: var(--bronze);
+
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+
+    }
+
+    .header-badges {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 8px;
+
+    }
+
+    .pill-badge {
+
+      display: inline-flex;
+
+      align-items: center;
+
+      gap: 6px;
+
+      padding: 4px 10px;
+
+      border-radius: 14px;
+
+      font-size: 11px;
+
+      font-weight: 600;
+
+      border: 1px solid var(--stage-border);
+
+      background: var(--stage-panel);
+
+      color: var(--text-secondary);
+
+    }
+
+    .pill-badge.active-bronze {
+
+      border-color: var(--bronze-border);
+
+      background: var(--bronze-subtle);
+
+      color: var(--bronze);
+
+    }
+
+    .pill-badge.pending-orange {
+
+      border-color: var(--hazard-border);
+
+      background: var(--hazard-subtle);
+
+      color: var(--hazard);
+
+    }
+
+    /* Main Workbench Layout */
+
+    .workbench-container {
+
+      display: flex;
+
+      height: calc(100vh - 56px);
+
+      overflow: hidden;
+
+    }
+
+    /* Column 1: Asset Catalog Rail */
+
+    .catalog-rail {
+
+      width: 290px;
+
+      flex-shrink: 0;
+
+      background: var(--stage-surface);
+
+      border-right: 1px solid var(--stage-border);
+
+      display: flex;
+
+      flex-direction: column;
+
+    }
+
+    .rail-header {
+
+      padding: 14px 16px;
+
+      border-bottom: 1px solid var(--stage-border);
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+    }
+
+    .rail-title {
+
+      font-size: 12px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      color: var(--text-secondary);
+
+    }
+
+    .asset-list {
+
+      flex: 1;
+
+      overflow-y: auto;
+
+      padding: 8px;
+
+    }
+
+    .asset-item {
+
+      padding: 10px 12px;
+
+      border-radius: 6px;
+
+      border: 1px solid transparent;
+
+      margin-bottom: 6px;
+
+      cursor: pointer;
+
+      background: var(--stage-panel);
+
+      transition: all 0.15s ease;
+
+    }
+
+    .asset-item:hover {
+
+      border-color: var(--stage-border-bright);
+
+      background: #1e2637;
+
+    }
+
+    .asset-item.selected {
+
+      border-color: var(--bronze-border);
+
+      background: #232c3e;
+
+    }
+
+    .asset-item-title {
+
+      font-size: 13px;
+
+      font-weight: 600;
+
+      color: #fff;
+
+      margin-bottom: 4px;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+    }
+
+    .asset-item-meta {
+
+      font-size: 11px;
+
+      color: var(--text-secondary);
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+    }
+
+    .status-tag {
+
+      padding: 2px 6px;
+
+      border-radius: 4px;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+    }
+
+    .tag-clean { background: var(--clean-subtle); color: var(--clean); border: 1px solid var(--clean-border); }
+
+    .tag-hazard { background: var(--hazard-subtle); color: var(--hazard); border: 1px solid var(--hazard-border); }
+
+    .tag-unscreened { background: rgba(148, 163, 184, 0.1); color: var(--text-secondary); border: 1px solid var(--stage-border); }
+
+    .tag-approved { background: var(--bronze-subtle); color: var(--bronze); border: 1px solid var(--bronze-border); }
+
+    .tag-rejected { background: var(--rejected-subtle); color: var(--rejected); border: 1px solid var(--rejected-border); }
+
+    .tag-published { background: var(--published-subtle); color: var(--published); border: 1px solid var(--published-border); }
+
+    /* Column 2: Center Stage & Multi-Track Timeline */
+
+    .center-stage {
+
+      flex: 1;
+
+      display: flex;
+
+      flex-direction: column;
+
+      overflow-y: auto;
+
+      background: var(--stage-bg);
+
+      border-right: 1px solid var(--stage-border);
+
+    }
+
+    .viewing-area {
+
+      padding: 20px 24px 16px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+    }
+
+    .player-monitor-frame {
+
+      width: 100%;
+
+      max-width: 720px;
+
+      aspect-ratio: 16 / 9;
+
+      background: #000;
+
+      border: 1px solid var(--stage-border-bright);
+
+      border-radius: 8px;
+
+      position: relative;
+
+      overflow: hidden;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+
+    }
+
+    #preview-canvas {
+
+      width: 100%;
+
+      height: 100%;
+
+      object-fit: contain;
+
+    }
+
+    .monitor-timecode-hud {
+
+      position: absolute;
+
+      top: 12px;
+
+      left: 12px;
+
+      background: rgba(15, 23, 42, 0.85);
+
+      border: 1px solid rgba(255,255,255,0.1);
+
+      padding: 4px 10px;
+
+      border-radius: 4px;
+
+      font-size: 16px;
+
+      font-weight: 700;
+
+      color: #fff;
+
+      letter-spacing: 0.05em;
+
+      pointer-events: none;
+
+    }
+
+    .monitor-hazard-warning-hud {
+
+      position: absolute;
+
+      top: 12px;
+
+      right: 12px;
+
+      background: rgba(220, 38, 38, 0.9);
+
+      color: #fff;
+
+      font-size: 11px;
+
+      font-weight: 700;
+
+      padding: 4px 8px;
+
+      border-radius: 4px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      display: none;
+
+      animation: pulse 1s infinite alternate;
+
+    }
+
+    @keyframes pulse { from { opacity: 0.7; } to { opacity: 1.0; } }
+
+    .monitor-subtitle-overlay {
+
+      position: absolute;
+
+      bottom: 16px;
+
+      left: 24px;
+
+      right: 24px;
+
+      text-align: center;
+
+      color: #ffeb3b;
+
+      font-size: 14px;
+
+      font-weight: 600;
+
+      text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 2px #000;
+
+      pointer-events: none;
+
+    }
+
+    /* Player Transport Controls */
+
+    .transport-bar {
+
+      width: 100%;
+
+      max-width: 720px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-top: 12px;
+
+      padding: 8px 14px;
+
+      background: var(--stage-surface);
+
+      border: 1px solid var(--stage-border);
+
+      border-radius: 6px;
+
+    }
+
+    .transport-btn-group {
+
+      display: flex;
+
+      gap: 6px;
+
+      align-items: center;
+
+    }
+
+    .btn-icon {
+
+      background: var(--stage-panel);
+
+      border: 1px solid var(--stage-border);
+
+      color: var(--text-primary);
+
+      width: 32px;
+
+      height: 32px;
+
+      border-radius: 4px;
+
+      cursor: pointer;
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      font-size: 13px;
+
+      transition: all 0.15s ease;
+
+    }
+
+    .btn-icon:hover {
+
+      background: var(--stage-border-bright);
+
+      color: #fff;
+
+    }
+
+    .btn-icon.play-btn {
+
+      background: var(--bronze-subtle);
+
+      border-color: var(--bronze-border);
+
+      color: var(--bronze);
+
+    }
+
+    .btn-icon.play-btn:hover {
+
+      background: var(--bronze);
+
+      color: var(--text-ink);
+
+    }
+
+    /* Interactive Multi-Track Timeline */
+
+    .timeline-container {
+
+      padding: 16px 24px 24px;
+
+      flex: 1;
+
+    }
+
+    .timeline-header {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 8px;
+
+    }
+
+    .timeline-title {
+
+      font-size: 12px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      color: var(--text-secondary);
+
+    }
+
+    .timeline-viewport {
+
+      background: var(--timeline-bg);
+
+      border: 1px solid var(--stage-border);
+
+      border-radius: 6px;
+
+      position: relative;
+
+      user-select: none;
+
+      cursor: crosshair;
+
+      overflow: hidden;
+
+    }
+
+    .time-ruler {
+
+      height: 24px;
+
+      background: var(--timeline-ruler);
+
+      border-bottom: 1px solid var(--stage-border);
+
+      position: relative;
+
+    }
+
+    .ruler-tick {
+
+      position: absolute;
+
+      bottom: 0;
+
+      height: 6px;
+
+      width: 1px;
+
+      background: rgba(255,255,255,0.25);
+
+    }
+
+    .ruler-label {
+
+      position: absolute;
+
+      top: 4px;
+
+      font-size: 10px;
+
+      color: var(--text-secondary);
+
+      transform: translateX(-50%);
+
+    }
+
+    .track-row {
+
+      height: 36px;
+
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+
+      position: relative;
+
+      display: flex;
+
+      align-items: center;
+
+    }
+
+    .track-label {
+
+      position: absolute;
+
+      left: 10px;
+
+      font-size: 10px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      color: var(--text-tertiary);
+
+      z-index: 5;
+
+      pointer-events: none;
+
+    }
+
+    .timeline-hazard-block {
+
+      position: absolute;
+
+      top: 4px;
+
+      bottom: 4px;
+
+      background: rgba(217, 119, 6, 0.45);
+
+      border: 1px solid #f59e0b;
+
+      border-radius: 3px;
+
+      cursor: pointer;
+
+      transition: all 0.15s ease;
+
+      z-index: 6;
+
+    }
+
+    .timeline-hazard-block:hover, .timeline-hazard-block.active {
+
+      background: rgba(217, 119, 6, 0.75);
+
+      border-color: #fbbf24;
+
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+
+    }
+
+    .timeline-safe-margin {
+
+      position: absolute;
+
+      top: 8px;
+
+      bottom: 8px;
+
+      background: repeating-linear-gradient(45deg, rgba(55, 65, 81, 0.7), rgba(55, 65, 81, 0.7) 4px, rgba(31, 41, 55, 0.7) 4px, rgba(31, 41, 55, 0.7) 8px);
+
+      border-right: 1px dashed rgba(255,255,255,0.4);
+
+      pointer-events: none;
+
+      z-index: 4;
+
+    }
+
+    .timeline-subtitle-block {
+
+      position: absolute;
+
+      top: 6px;
+
+      bottom: 6px;
+
+      background: rgba(37, 99, 235, 0.4);
+
+      border: 1px solid #3b82f6;
+
+      border-radius: 3px;
+
+      font-size: 10px;
+
+      color: #bfdbfe;
+
+      padding: 0 6px;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+      display: flex;
+
+      align-items: center;
+
+      z-index: 6;
+
+    }
+
+    .timeline-playhead {
+
+      position: absolute;
+
+      top: 0;
+
+      bottom: 0;
+
+      width: 2px;
+
+      background: var(--timeline-playhead);
+
+      z-index: 10;
+
+      pointer-events: none;
+
+      box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+
+    }
+
+    .playhead-handle {
+
+      position: absolute;
+
+      top: 0;
+
+      left: -6px;
+
+      width: 14px;
+
+      height: 12px;
+
+      background: var(--timeline-playhead);
+
+      clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+
+    }
+
+    /* Column 3: Editorial Clearance Inspector */
+
+    .inspector-drawer {
+
+      width: 380px;
+
+      flex-shrink: 0;
+
+      background: var(--stage-surface);
+
+      border-left: 1px solid var(--stage-border);
+
+      display: flex;
+
+      flex-direction: column;
+
+      overflow-y: auto;
+
+    }
+
+    .inspector-header {
+
+      padding: 14px 18px;
+
+      border-bottom: 1px solid var(--stage-border);
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+    }
+
+    .inspector-title {
+
+      font-size: 13px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      color: var(--bronze);
+
+    }
+
+    .inspector-content {
+
+      padding: 16px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 16px;
+
+    }
+
+    .card {
+
+      background: var(--ivory-card);
+
+      border: 1px solid var(--ivory-border);
+
+      border-radius: 6px;
+
+      padding: 14px;
+
+    }
+
+    .card-header {
+
+      font-size: 12px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.04em;
+
+      color: var(--text-secondary);
+
+      margin-bottom: 10px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+    }
+
+    .metrics-table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      font-size: 12px;
+
+    }
+
+    .metrics-table td {
+
+      padding: 6px 4px;
+
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+
+    }
+
+    .metrics-table td:last-child {
+
+      text-align: right;
+
+      font-weight: 600;
+
+    }
+
+    .form-group {
+
+      margin-bottom: 12px;
+
+    }
+
+    .form-label {
+
+      display: block;
+
+      font-size: 11px;
+
+      font-weight: 600;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.03em;
+
+      color: var(--text-secondary);
+
+      margin-bottom: 5px;
+
+    }
+
+    .form-control {
+
+      width: 100%;
+
+      padding: 8px 10px;
+
+      background: var(--stage-bg);
+
+      border: 1px solid var(--stage-border);
+
+      border-radius: 4px;
+
+      color: #fff;
+
+      font-size: 12px;
+
+    }
+
+    .form-control:focus {
+
+      outline: none;
+
+      border-color: var(--bronze);
+
+    }
+
+    textarea.form-control {
+
+      resize: vertical;
+
+      min-height: 60px;
+
+    }
+
+    .btn {
+
+      padding: 8px 16px;
+
+      font-size: 12px;
+
+      font-weight: 700;
+
+      border-radius: 4px;
+
+      border: none;
+
+      cursor: pointer;
+
+      display: inline-flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      gap: 6px;
+
+      transition: all 0.15s ease;
+
+    }
+
+    .btn-bronze {
+
+      background: var(--bronze);
+
+      color: var(--text-ink);
+
+    }
+
+    .btn-bronze:hover:not(:disabled) {
+
+      background: var(--bronze-hover);
+
+    }
+
+    .btn-bronze:disabled {
+
+      opacity: 0.4;
+
+      cursor: not-allowed;
+
+    }
+
+    .btn-secondary {
+
+      background: var(--stage-panel);
+
+      border: 1px solid var(--stage-border);
+
+      color: var(--text-primary);
+
+    }
+
+    .btn-secondary:hover {
+
+      background: var(--stage-border-bright);
+
+    }
+
+    .btn-danger {
+
+      background: var(--rejected);
+
+      color: #fff;
+
+    }
+
+    .btn-full { width: 100%; }
+
+    .code-snippet {
+
+      background: #090c12;
+
+      border: 1px solid var(--stage-border);
+
+      padding: 8px 10px;
+
+      border-radius: 4px;
+
+      font-size: 11px;
+
+      color: #cbd5e1;
+
+      max-height: 100px;
+
+      overflow-y: auto;
+
+      white-space: pre-wrap;
+
+      word-break: break-all;
+
+    }
+
+    /* Modal / Drawer for Managed Asset Import */
+
+    .modal-overlay {
+
+      position: fixed;
+
+      inset: 0;
+
+      background: rgba(0, 0, 0, 0.7);
+
+      backdrop-filter: blur(2px);
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      z-index: 200;
+
+    }
+
+    .modal-dialog {
+
+      background: var(--stage-surface);
+
+      border: 1px solid var(--stage-border-bright);
+
+      border-radius: 8px;
+
+      width: 520px;
+
+      max-width: 90vw;
+
+      padding: 20px;
+
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+
+    }
+
+    .modal-header {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 16px;
+
+      border-bottom: 1px solid var(--stage-border);
+
+      padding-bottom: 10px;
+
+    }
+
+    .modal-title {
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.05em;
+
+      color: var(--bronze);
+
+    }
+
+    /* FireTrace Lab View */
+
+    .view-container {
+
+      display: none;
+
+      flex: 1;
+
+      overflow-y: auto;
+
+      padding: 24px;
+
+    }
+
+    .view-container.active-view {
+
+      display: block;
+
+    }
+
+    .table-container {
+
+      background: var(--stage-surface);
+
+      border: 1px solid var(--stage-border);
+
+      border-radius: 6px;
+
+      overflow: hidden;
+
+      margin-bottom: 24px;
+
+    }
+
+    .data-table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      font-size: 12px;
+
+    }
+
+    .data-table th, .data-table td {
+
+      padding: 10px 14px;
+
+      text-align: left;
+
+      border-bottom: 1px solid var(--stage-border);
+
+    }
+
+    .data-table th {
+
+      background: var(--stage-panel);
+
+      font-size: 11px;
+
+      font-weight: 700;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.04em;
+
+      color: var(--text-secondary);
+
+    }
+
+    .data-table tr:hover td {
+
+      background: rgba(255,255,255,0.02);
+
+    }
+
+    /* Inline Status & Feedback Banners */
+
+    .inline-feedback-banner {
+
+      padding: 8px 12px;
+
+      border-radius: 4px;
+
+      font-size: 11px;
+
+      margin-top: 8px;
+
+      display: none;
+
+      line-height: 1.4;
+
+      word-break: break-word;
+
+    }
+
+    .feedback-info {
+
+      background: rgba(59, 130, 246, 0.15);
+
+      border: 1px solid rgba(59, 130, 246, 0.3);
+
+      color: #93c5fd;
+
+    }
+
+    .feedback-success {
+
+      background: rgba(16, 185, 129, 0.15);
+
+      border: 1px solid rgba(16, 185, 129, 0.3);
+
+      color: #6ee7b7;
+
+    }
+
+    .feedback-error {
+
+      background: rgba(239, 68, 68, 0.15);
+
+      border: 1px solid rgba(239, 68, 68, 0.3);
+
+      color: #fca5a5;
+
+    }
+
+    .feedback-warning {
+
+      background: rgba(245, 158, 11, 0.15);
+
+      border: 1px solid rgba(245, 158, 11, 0.3);
+
+      color: #fcd34d;
+
+    }
+
+    /* Responsive Queries */
+
+    @media (max-width: 1200px) {
+
+      .catalog-rail { width: 240px; }
+
+      .inspector-drawer { width: 320px; }
+
+    }
+
+    @media (max-width: 900px) {
+
+      header {
+
+        height: auto;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        padding: 10px 14px;
+
+        gap: 10px;
+
+      }
+
+      .brand-section {
+
+        justify-content: space-between;
+
+      }
+
+      .nav-tabs {
+
+        width: 100%;
+
+        overflow-x: auto;
+
+        white-space: nowrap;
+
+      }
+
+      .nav-tab {
+
+        flex: 1;
+
+        text-align: center;
+
+        padding: 8px 6px;
+
+        font-size: 11px;
+
+      }
+
+      .header-badges {
+
+        flex-wrap: wrap;
+
+        gap: 6px;
+
+      }
+
+      .pill-badge {
+
+        font-size: 10px;
+
+        padding: 3px 8px;
+
+      }
+
+      .workbench-container {
+
+        flex-direction: column;
+
+        height: auto;
+
+      }
+
+      .catalog-rail, .center-stage, .inspector-drawer {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        border: none;
+
+      }
+
+      .catalog-rail {
+
+        height: auto;
+
+        max-height: 220px;
+
+        border-bottom: 1px solid var(--stage-border);
+
+      }
+
+      .transport-bar {
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+      }
+
+      .inspector-drawer {
+
+        border-top: 1px solid var(--stage-border);
+
+      }
+
+    }
+
+    @media (max-width: 500px) {
+
+      body {
+
+        overflow-x: hidden;
+
+      }
+
+      header {
+
+        padding: 8px;
+
+      }
+
+      .nav-tabs {
+
+        flex-direction: column;
+
+        gap: 4px;
+
+      }
+
+      .nav-tab {
+
+        width: 100%;
+
+      }
+
+      .header-badges {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+      }
+
+      .pill-badge {
+
+        width: 100%;
+
+        justify-content: flex-start;
+
+      }
+
+      .transport-btn-group {
+
+        width: 100%;
+
+        justify-content: space-between;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <!-- Top App Navigation -->
+
+  <header>
+
+    <div class="brand-section">
+
+      <div class="brand-logo">FS</div>
+
+      <div>
+
+        <div class="brand-title">FireShield</div>
+
+        <div class="brand-subtitle">Standards Clearance & Continuous Recovery Suite</div>
+
+      </div>
+
+    </div>
+
+    <div class="nav-tabs">
+
+      <button class="nav-tab active" onclick="switchView('clearance')">Screening & Clearance</button>
+
+      <button class="nav-tab" onclick="switchView('firetrace')">FireTrace Incident Lab</button>
+
+      <button class="nav-tab" onclick="switchView('releases')">Ed25519 Sidecars</button>
+
+    </div>
+
+    <div class="header-badges">
+
+      <span class="pill-badge active-bronze" id="tenant-pill">Tenant: publisher-demo-tenant</span>
+
+      <span class="pill-badge" id="engine-health-pill">Engine: Local Loopback OK</span>
+
+      <span class="pill-badge pending-orange" id="tv-status-pill">Android TV: PENDING / NO AVD</span>
+
+    </div>
+
+  </header>
+
+  <!-- VIEW 1: Screening & Clearance Suite -->
+
+  <div id="view-clearance" class="workbench-container">
+
+    <!-- Column 1: Asset Catalog Rail -->
+
+    <aside class="catalog-rail">
+
+      <div class="rail-header">
+
+        <span class="rail-title">Catalog Assets</span>
+
+        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="openImportModal()">+ Ingest</button>
+
+      </div>
+
+      <div class="asset-list" id="asset-list-container">
+
+        <!-- Rendered via JavaScript -->
+
+        <div style="padding: 12px; color: var(--text-tertiary);">Loading catalog assets...</div>
+
+      </div>
+
+    </aside>
+
+    <!-- Column 2: Center Stage (Frame Monitor & Timeline) -->
+
+    <main class="center-stage">
+
+      <div class="viewing-area">
+
+        <div class="player-monitor-frame">
+
+          <canvas id="preview-canvas" width="640" height="360"></canvas>
+
+          <div class="monitor-timecode-hud tabular-nums" id="hud-timecode">00:00:00:00</div>
+
+          <div class="monitor-hazard-warning-hud" id="hud-hazard-pill">! HAZARD DETECTED !</div>
+
+          <div class="monitor-subtitle-overlay" id="hud-subtitle"></div>
+
+        </div>
+
+        <div class="transport-bar">
+
+          <div class="transport-btn-group">
+
+            <button class="btn-icon" title="Jump to Start" onclick="seekToMs(0)">&#x23EE;</button>
+
+            <button class="btn-icon" title="Step Back 1 Frame" onclick="stepFrame(-1)">&#x25C0;</button>
+
+            <button class="btn-icon play-btn" id="play-pause-btn" title="Play / Pause" onclick="togglePlayback()">&#x25B6;</button>
+
+            <button class="btn-icon" title="Step Forward 1 Frame" onclick="stepFrame(1)">&#x25B6;</button>
+
+            <button class="btn-icon" title="Jump to Hazard" onclick="jumpToHazard()">&#x26A0;</button>
+
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+
+            <span class="tabular-nums" style="font-size: 13px; font-weight: 700;" id="transport-timecode">0 ms / 0 ms</span>
+
+          </div>
+
+          <div style="display: flex; gap: 6px;">
+
+            <button class="btn btn-bronze" style="padding: 5px 10px; font-size: 11px;" id="btn-run-screening" onclick="triggerScreening()">Run Screening</button>
+
+          </div>
+
+        </div>
+
+        <div id="screening-feedback" class="inline-feedback-banner"></div>
+
+      </div>
+
+      <!-- Multi-Track Interactive Visual Timeline -->
+
+      <div class="timeline-container">
+
+        <div class="timeline-header">
+
+          <span class="timeline-title">Synchronized Presentation Timeline</span>
+
+          <span style="font-size: 11px; color: var(--text-secondary);" id="timeline-scale-label">Duration: 2000 ms</span>
+
+        </div>
+
+        <div class="timeline-viewport" id="timeline-viewport" onclick="onTimelineClick(event)">
+
+          <!-- Time Ruler -->
+
+          <div class="time-ruler" id="timeline-ruler-track"></div>
+
+          <!-- Track 1: Content Duration Track -->
+
+          <div class="track-row" id="track-content">
+
+            <span class="track-label">Sequence</span>
+
+          </div>
+
+          <!-- Track 2: Visual Hazard Intervals Track -->
+
+          <div class="track-row" id="track-hazards">
+
+            <span class="track-label">Hazard</span>
+
+          </div>
+
+          <!-- Track 3: Narrative Subtitles Track -->
+
+          <div class="track-row" id="track-subtitles">
+
+            <span class="track-label">Subtitles</span>
+
+          </div>
+
+          <!-- Interactive Playhead Needle -->
+
+          <div class="timeline-playhead" id="timeline-playhead" style="left: 0px;">
+
+            <div class="playhead-handle"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Column 3: Editorial Clearance Inspector -->
+
+    <aside class="inspector-drawer">
+
+      <div class="inspector-header">
+
+        <span class="inspector-title">Clearance Inspector</span>
+
+        <span class="status-tag tag-unscreened" id="inspector-status-badge">Unreviewed</span>
+
+      </div>
+
+      <div class="inspector-content">
+
+        <!-- Section 1: Candidate Hazard Metrics -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <span>1. Photometric Hazard Metrics</span>
+
+            <span class="status-tag tag-hazard" id="card-hazard-tag">Pending</span>
+
+          </div>
+
+          <table class="metrics-table tabular-nums">
+
+            <tr><td>Interval Window</td><td id="m-window">—</td></tr>
+
+            <tr><td>Duration / Safe Resume</td><td id="m-duration">—</td></tr>
+
+            <tr><td>Peak Luminance Delta (&Delta;L)</td><td id="m-lum-delta">—</td></tr>
+
+            <tr><td>Flash Frequency (Hz)</td><td id="m-flash-freq">—</td></tr>
+
+            <tr><td>2D FFT Spectral Ratio</td><td id="m-spectral">—</td></tr>
+
+            <tr><td>Screen Area Impact</td><td id="m-area">—</td></tr>
+
+          </table>
+
+        </div>
+
+        <!-- Section 2: Synaptic Shield Narrative Context -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <span>2. Synaptic Narrative Context</span>
+
+            <button class="btn btn-secondary" style="padding: 2px 6px; font-size: 10px;" onclick="groundContext()">Ground Dialogue</button>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label">Grounded Context Note</label>
+
+            <textarea class="form-control" id="input-context-text" placeholder="Click 'Ground Dialogue' or enter editorial override text..."></textarea>
+
+          </div>
+
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+
+            <input type="checkbox" id="check-context-approved" style="width: auto;">
+
+            <label for="check-context-approved" style="font-size: 12px; cursor: pointer; color: var(--text-primary);">Editorially approved for narrative banner</label>
+
+          </div>
+
+          <button class="btn btn-secondary btn-full" onclick="approveContext()">Save Context Approval</button>
+
+          <div id="context-feedback" class="inline-feedback-banner"></div>
+
+        </div>
+
+        <!-- Section 3: Human Editorial Review Gate -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <span>3. Human Review Gate</span>
+
+            <span style="font-size: 10px; color: var(--bronze);">Mandatory Gate</span>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label">Reviewer ID</label>
+
+            <input type="text" class="form-control" id="input-reviewer-id" placeholder="Your editor name or alias">
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label">Editorial Decision</label>
+
+            <select class="form-control" id="select-editorial-decision">
+
+              <option value="approved">Approved for Release</option>
+
+              <option value="rejected">Rejected (Hazard Blocked)</option>
+
+            </select>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label">Sign-off Notes</label>
+
+            <input type="text" class="form-control" id="input-review-notes" placeholder="Record your editorial decision and reasoning">
+
+          </div>
+
+          <button class="btn btn-bronze btn-full" onclick="submitReview()">Commit Review Decision</button>
+
+          <div id="review-feedback" class="inline-feedback-banner"></div>
+
+        </div>
+
+        <!-- Section 4: Cryptographic Release Publisher -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <span>4. Cryptographic Packaging</span>
+
+            <span class="status-tag tag-unscreened" id="pub-status-tag">Unpublished</span>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label">Rendition Set ID</label>
+
+            <input type="text" class="form-control" id="input-rendition-id" value="hls-1080p-demo">
+
+          </div>
+
+          <button class="btn btn-bronze btn-full" id="btn-publish-release" onclick="publishRelease()" disabled>Sign & Publish Ed25519 Sidecar</button>
+
+          <div id="publish-feedback" class="inline-feedback-banner"></div>
+
+          <div id="published-release-details" style="display: none; margin-top: 12px;">
+
+            <div class="form-label" style="color: var(--bronze);">Published Release Bundle</div>
+
+            <div class="code-snippet tabular-nums" id="pub-release-id-box"></div>
+
+            <div class="form-label" style="margin-top: 8px;">Android TV Intent Command</div>
+
+            <div class="code-snippet tabular-nums" id="pub-intent-cmd-box" style="font-size: 10px;"></div>
+
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+
+              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="copyIntentCmd()">Copy Command</button>
+
+              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="downloadSidecar()">Sidecar JSON</button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- VIEW 2: FireTrace Incident Lab -->
+
+  <div id="view-firetrace" class="view-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+
+      <div>
+
+        <h2 style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #fff;">FireTrace Recovery Incident Lab</h2>
+
+        <p style="color: var(--text-secondary); font-size: 12px;">Post-Incident Forensics, Deterministic Retest Harness & EviRCA Advisory</p>
+
+      </div>
+
+      <button class="btn btn-secondary" onclick="loadIncidents()">Refresh Incidents</button>
+
+    </div>
+
+    <div class="table-container">
+
+      <table class="data-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Incident ID</th>
+
+            <th>Diagnostic Code</th>
+
+            <th>Recovery Status</th>
+
+            <th>Mismatch Fields</th>
+
+            <th>Position Drift</th>
+
+            <th>Retest Fixture</th>
+
+            <th>Actions</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="incidents-table-body">
+
+          <!-- Rendered dynamically -->
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div id="incident-detail-panel" style="display: none;" class="card">
+
+      <div class="card-header">
+
+        <span id="detail-incident-title">Incident Deep Dive</span>
+
+        <button class="btn btn-bronze" onclick="runRetestOnActiveIncident()">Run Deterministic Retest</button>
+
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+
+        <div>
+
+          <div class="form-label">Receipt Digest</div>
+
+          <div class="code-snippet tabular-nums" id="detail-receipt-digest"></div>
+
+          <div class="form-label" style="margin-top: 10px;">Retest Execution Trace</div>
+
+          <div class="code-snippet tabular-nums" id="detail-retest-trace" style="height: 120px;"></div>
+
+        </div>
+
+        <div>
+
+          <div class="form-label">EviRCA Advisory Diagnosis</div>
+
+          <div id="detail-advisory-box" style="background: var(--stage-bg); border: 1px solid var(--stage-border); padding: 12px; border-radius: 4px; font-size: 12px;">
+
+            <div id="advisory-hypotheses" style="color: #cbd5e1; margin-bottom: 8px;"></div>
+
+            <div id="advisory-next-check" style="color: var(--bronze); font-weight: 600;"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- VIEW 3: Ed25519 Sidecar Registry -->
+
+  <div id="view-releases" class="view-container">
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+
+      <div>
+
+        <h2 style="font-size: 16px; font-weight: 700; text-transform: uppercase; color: #fff;">Cryptographic Release Registry</h2>
+
+        <p style="color: var(--text-secondary); font-size: 12px;">Immutable Asymmetric Ed25519 v2 Sidecar Contracts</p>
+
+      </div>
+
+      <button class="btn btn-secondary" onclick="loadReleases()">Refresh Releases</button>
+
+    </div>
+
+    <div class="table-container">
+
+      <table class="data-table">
+
+        <thead>
+
+          <tr>
+
+            <th>Release ID</th>
+
+            <th>Rendition Set</th>
+
+            <th>Manifest Digest</th>
+
+            <th>Key ID / Alg</th>
+
+            <th>Notes Count</th>
+
+            <th>Published Time</th>
+
+            <th>Action</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="releases-table-body">
+
+          <!-- Rendered dynamically -->
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <!-- Modal: Ingest Managed Asset -->
+
+  <div class="modal-overlay" id="import-modal">
+
+    <div class="modal-dialog">
+
+      <div class="modal-header">
+
+        <span class="modal-title">Ingest Managed Asset</span>
+
+        <button class="btn-icon" onclick="closeImportModal()">&times;</button>
+
+      </div>
+
+      <div class="form-group">
+
+        <label class="form-label">Asset Name</label>
+
+        <input type="text" class="form-control" id="modal-ast-name" placeholder="e.g. Broadcast Episode 104 Cut">
+
+      </div>
+
+      <div class="form-group">
+
+        <label class="form-label">Source Path (Workspace-Confined)</label>
+
+        <input type="text" class="form-control" id="modal-ast-path" placeholder="e.g. data/catalog/sample.ts">
+
+      </div>
+
+      <div class="form-group">
+
+        <label class="form-label">Raw Media Bytes (Optional Hex or ASCII)</label>
+
+        <input type="text" class="form-control" id="modal-ast-bytes" placeholder="Enter byte data if importing raw memory buffer">
+
+      </div>
+
+      <div class="form-group">
+
+        <label class="form-label">Subtitles (WebVTT Content)</label>
+
+        <textarea class="form-control" id="modal-ast-vtt" placeholder="WEBVTT&#10;&#10;00:00.000 --> 00:02.000&#10;Emergency warning strobe active."></textarea>
+
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+
+        <button class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+
+        <button class="btn btn-bronze" onclick="submitImportAsset()">Register Asset</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Application Frontend Logic -->
+
+  <script>
+
+    // State
+
+    const API_BASE = "";
+
+    const TENANT_ID = "publisher-demo-tenant";
+
+    let assets = [];
+
+    let selectedAsset = null;
+
+    let currentReport = null;
+
+    let selectedFinding = null;
+
+    let activeRelease = null;
+
+    let incidents = [];
+
+    let activeIncident = null;
+
+    // Player State
+
+    let isPlaying = false;
+
+    let currentPositionMs = 0;
+
+    let animationFrameId = null;
+
+    let lastTickTime = 0;
+
+    // Init
+
+    window.addEventListener("DOMContentLoaded", () => {
+
+      fetchHealth();
+
+      loadAssets();
+
+      loadIncidents();
+
+      initCanvas();
+
+    });
+
+    // Navigation Switcher
+
+    function switchView(viewName) {
+
+      document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
+
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        if ((tab.getAttribute('onclick') || '').includes("'" + viewName + "'")) tab.classList.add('active');
+      });
+
+      document.getElementById("view-clearance").style.display = (viewName === "clearance") ? "flex" : "none";
+
+      document.getElementById("view-firetrace").style.display = (viewName === "firetrace") ? "block" : "none";
+
+      document.getElementById("view-releases").style.display = (viewName === "releases") ? "block" : "none";
+
+      if (viewName === "releases") loadReleases();
+
+      if (viewName === "firetrace") loadIncidents();
+
+    }
+
+    // Health
+
+    function setFeedback(elementId, message, type = "info") {
+
+      const el = document.getElementById(elementId);
+
+      if (!el) return;
+
+      el.textContent = message;
+
+      el.className = `inline-feedback-banner feedback-${type}`;
+
+      el.style.display = message ? "block" : "none";
+
+    }
+
+    async function fetchHealth() {
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/health`);
+
+        const data = await resp.json();
+
+        const mode = data.environment_mode ? data.environment_mode.replace(/_/g, " ") : "local";
+
+        document.getElementById("engine-health-pill").textContent = `Engine: ${data.status} · ${mode}`;
+
+      } catch (e) {
+
+        document.getElementById("engine-health-pill").textContent = "Engine: Offline";
+
+      }
+
+    }
+
+    // Assets Catalog
+
+    async function loadAssets() {
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/assets`);
+
+        const data = await resp.json();
+
+        assets = data.assets || [];
+
+        renderAssetList();
+
+        if (assets.length > 0 && !selectedAsset) {
+
+          selectAsset(assets[0].asset_id);
+
+        }
+
+      } catch (e) {
+
+        console.error("Failed to load assets", e);
+
+      }
+
+    }
+
+    function renderAssetList() {
+
+      const container = document.getElementById("asset-list-container");
+
+      container.innerHTML = "";
+
+      assets.forEach(ast => {
+
+        const el = document.createElement("div");
+
+        el.className = `asset-item ${selectedAsset && selectedAsset.asset_id === ast.asset_id ? "selected" : ""}`;
+
+        el.onclick = () => selectAsset(ast.asset_id);
+
+        let tagClass = "tag-unscreened";
+
+        let tagText = "Unscreened";
+
+        if (ast.has_screening) {
+
+          if (ast.review_state === "approved") {
+
+            tagClass = "tag-approved";
+
+            tagText = "Approved";
+
+          } else if (ast.review_state === "rejected") {
+
+            tagClass = "tag-rejected";
+
+            tagText = "Rejected";
+
+          } else if (ast.findings_count === 0) {
+
+            tagClass = "tag-clean";
+
+            tagText = "Clean";
+
+          } else {
+
+            tagClass = "tag-hazard";
+
+            tagText = "Hazard";
+
+          }
+
+        }
+
+        el.innerHTML = `
+
+          <div class="asset-item-title">${escapeHtml(ast.name)}</div>
+
+          <div class="asset-item-meta">
+
+            <span class="tabular-nums">${Math.round(ast.duration_ms / 1000)}s &bull; ${ast.fps} fps</span>
+
+            <span class="status-tag ${tagClass}">${tagText}</span>
+
+          </div>
+
+        `;
+
+        container.appendChild(el);
+
+      });
+
+    }
+
+    async function selectAsset(assetId) {
+
+      selectedAsset = assets.find(a => a.asset_id === assetId);
+
+      currentReport = null;
+      selectedFinding = null;
+      activeRelease = null;
+      document.getElementById('published-release-details').style.display = 'none';
+      document.getElementById('btn-publish-release').disabled = true;
+
+      renderAssetList();
+
+      currentPositionMs = 0;
+
+      updatePlayheadVisuals();
+
+      renderFrameCanvas();
+
+      // Check if already screened
+
+      if (selectedAsset.has_screening) {
+
+        await loadReport(selectedAsset.asset_revision_id);
+
+      } else {
+
+        renderUnscreenedInspector();
+
+      }
+
+      renderTimeline();
+
+    }
+
+    async function loadReport(revisionId) {
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/screening/reports/${encodeURIComponent(revisionId)}`);
+
+        if (resp.ok) {
+
+          const report = await resp.json();
+          if (!selectedAsset || selectedAsset.asset_revision_id !== revisionId) return;
+          currentReport = report;
+
+          renderScreenedInspector();
+
+        } else {
+
+          renderUnscreenedInspector();
+
+        }
+
+      } catch (e) {
+
+        renderUnscreenedInspector();
+
+      }
+
+      renderTimeline();
+
+    }
+
+    async function triggerScreening() {
+      if (!selectedAsset) return;
+      const assetId = selectedAsset.asset_id;
+      const btn = document.getElementById('btn-run-screening');
+      btn.disabled = true;
+      btn.textContent = 'Screening frames…';
+      setFeedback('screening-feedback', 'Submitting headless screening job…', 'info');
+      try {
+        const resp = await fetch(`${API_BASE}/api/v1/screening/jobs`, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({asset_id:assetId,wait:false}), signal:AbortSignal.timeout(10000)
+        });
+        const job = await resp.json();
+        if (!resp.ok) throw new Error(job.error || 'Screening could not start.');
+        const deadline = Date.now() + 60000;
+        while (Date.now() < deadline) {
+          const result = await fetch(`${API_BASE}/api/v1/screening/jobs/${job.job_id}`, {signal:AbortSignal.timeout(10000)});
+          const state = await result.json();
+          if (!result.ok) throw new Error(state.error || 'Cannot read this screening job.');
+          if (state.status === 'FAILED') throw new Error(state.error_message || 'Frame analysis failed.');
+          if (state.status === 'COMPLETED') {
+            setFeedback('screening-feedback', `Screening complete: ${state.findings_count} candidate findings.`, 'success');
+            await loadAssets();
+            if (selectedAsset?.asset_id === assetId) await selectAsset(assetId);
+            return;
+          }
+          await new Promise(resolve => setTimeout(resolve,500));
+        }
+        throw new Error('Screening exceeded one minute. Check the server terminal before retrying.');
+      } catch(e) {
+        setFeedback('screening-feedback', `Screening stopped: ${e.message}`, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Screening';
+      }
+    }
+
+    function renderUnscreenedInspector() {
+
+      document.getElementById("inspector-status-badge").className = "status-tag tag-unscreened";
+
+      document.getElementById("inspector-status-badge").textContent = "Unscreened";
+
+      document.getElementById("card-hazard-tag").textContent = "No Data";
+
+      document.getElementById("m-window").textContent = "—";
+
+      document.getElementById("m-duration").textContent = "—";
+
+      document.getElementById("m-lum-delta").textContent = "—";
+
+      document.getElementById("m-flash-freq").textContent = "—";
+
+      document.getElementById("m-spectral").textContent = "—";
+
+      document.getElementById("m-area").textContent = "—";
+
+      document.getElementById("input-context-text").value = "";
+
+      document.getElementById("check-context-approved").checked = false;
+
+      document.getElementById("btn-publish-release").disabled = true;
+
+      document.getElementById("pub-status-tag").textContent = "Unpublished";
+
+      document.getElementById("published-release-details").style.display = "none";
+
+    }
+
+    function renderScreenedInspector() {
+
+      if (!currentReport) return;
+
+      const findings = currentReport.findings || [];
+
+      const hasHazards = findings.length > 0;
+
+      document.getElementById("inspector-status-badge").className =
+
+        currentReport.review_state === "approved" ? "status-tag tag-approved" :
+
+        currentReport.review_state === "rejected" ? "status-tag tag-rejected" : "status-tag tag-hazard";
+
+      document.getElementById("inspector-status-badge").textContent = currentReport.review_state.toUpperCase();
+
+      if (hasHazards) {
+
+        selectedFinding = findings[0];
+
+        document.getElementById("card-hazard-tag").className = "status-tag tag-hazard";
+
+        document.getElementById("card-hazard-tag").textContent = selectedFinding.types.join(", ");
+
+        document.getElementById("m-window").textContent = `${selectedFinding.start_ms} ms → ${selectedFinding.end_ms} ms`;
+
+        document.getElementById("m-duration").textContent = `${selectedFinding.end_ms - selectedFinding.start_ms} ms (Safe resume: ${selectedFinding.proposed_safe_resume_ms} ms)`;
+
+        const m = selectedFinding.metrics || {};
+
+        document.getElementById("m-lum-delta").textContent = (m.max_luminance_delta !== undefined) ? String(m.max_luminance_delta) : "Not measured";
+
+        document.getElementById("m-flash-freq").textContent = (m.peak_luminance_flashes_per_sec !== undefined) ? `${m.peak_luminance_flashes_per_sec} Hz` : "Not measured";
+
+        document.getElementById("m-spectral").textContent = (m.max_spectral_concentration !== undefined) ? String(m.max_spectral_concentration) : "Not measured";
+
+        document.getElementById("m-area").textContent = (m.max_affected_area_fraction !== undefined) ? `${Math.round(m.max_affected_area_fraction * 100)}%` : "Not measured";
+
+      } else {
+
+        selectedFinding = null;
+
+        document.getElementById("card-hazard-tag").className = "status-tag tag-clean";
+
+        document.getElementById("card-hazard-tag").textContent = "0 CANDIDATE FINDINGS";
+
+        document.getElementById("m-window").textContent = "No hazard intervals detected";
+
+        document.getElementById("m-duration").textContent = "No candidates detected; certification not established";
+
+        document.getElementById("m-lum-delta").textContent = "No interval metrics";
+
+        document.getElementById("m-flash-freq").textContent = "No interval metrics";
+
+        document.getElementById("m-spectral").textContent = "No interval metrics";
+
+        document.getElementById("m-area").textContent = "No interval metrics";
+
+      }
+
+      // Check context notes
+
+      const notes = currentReport.context_notes || [];
+
+      if (notes.length > 0) {
+
+        document.getElementById("input-context-text").value = notes[0].text;
+
+        document.getElementById("check-context-approved").checked = notes[0].editorial_approved;
+
+      } else {
+
+        document.getElementById("input-context-text").value = "";
+
+        document.getElementById("check-context-approved").checked = false;
+
+      }
+
+      // Update publishing button enabled state
+
+      document.getElementById("btn-publish-release").disabled = (currentReport.review_state !== "approved");
+
+    }
+
+    // Context Actions
+
+    async function groundContext() {
+
+      if (!selectedAsset || !selectedFinding) return;
+
+      setFeedback("context-feedback", "Grounding dialogue from source cues...", "info");
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/context/ground`, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+
+            asset_revision_id: selectedAsset.asset_revision_id,
+
+            interval_id: selectedFinding.interval_id,
+
+            method: "extractive_subtitles"
+
+          })
+
+        });
+
+        if (resp.ok) {
+
+          const note = await resp.json();
+
+          document.getElementById("input-context-text").value = note.text;
+
+          setFeedback("context-feedback", `✓ Grounded cues: ${note.source_cue_ids ? note.source_cue_ids.join(", ") : "dialogue excerpt"}`, "success");
+
+        } else {
+
+          const err = await resp.json().catch(() => ({}));
+
+          setFeedback("context-feedback", `Dialogue grounding failed: ${err.error || resp.statusText}`, "error");
+
+        }
+
+      } catch (e) {
+
+        setFeedback("context-feedback", `Grounding network error: ${e.message}`, "error");
+
+      }
+
+    }
+
+    async function approveContext() {
+
+      if (!selectedAsset || !selectedFinding) return;
+
+      const text = document.getElementById("input-context-text").value.trim();
+
+      const approved = document.getElementById("check-context-approved").checked;
+
+      if (!approved) {
+
+        setFeedback("context-feedback", "Please check 'Editorially approved for narrative banner' before saving approval.", "warning");
+
+        return;
+
+      }
+
+      if (!text) {
+
+        setFeedback("context-feedback", "Context text cannot be empty. Ground dialogue or enter notes.", "warning");
+
+        return;
+
+      }
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/context/approve`, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+
+            asset_revision_id: selectedAsset.asset_revision_id,
+
+            interval_id: selectedFinding.interval_id,
+
+            reviewer_id: document.getElementById("input-reviewer-id").value,
+
+            text: text
+
+          })
+
+        });
+
+        if (resp.ok) {
+
+          setFeedback("context-feedback", `✓ Narrative context approved and bound to interval ${selectedFinding.interval_id}`, "success");
+
+          await loadReport(selectedAsset.asset_revision_id);
+
+        } else {
+
+          const err = await resp.json().catch(() => ({}));
+
+          setFeedback("context-feedback", `Approval rejected: ${err.error || resp.statusText} (Ensure cues are grounded first)`, "error");
+
+        }
+
+      } catch (e) {
+
+        setFeedback("context-feedback", `Error saving context approval: ${e.message}`, "error");
+
+      }
+
+    }
+
+    // Editorial Review Actions
+
+    async function submitReview() {
+
+      if (!selectedAsset || !currentReport) return;
+
+      const decision = document.getElementById("select-editorial-decision").value;
+
+      const reviewer = document.getElementById("input-reviewer-id").value;
+
+      const notes = document.getElementById("input-review-notes").value;
+
+      setFeedback("review-feedback", "Submitting editorial decision...", "info");
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/screening/reports/${encodeURIComponent(selectedAsset.asset_revision_id)}/review`, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify({
+
+            reviewer_id: reviewer,
+
+            decision: decision,
+
+            notes: notes
+
+          })
+
+        });
+
+        if (resp.ok) {
+
+          setFeedback("review-feedback", `✓ Editorial decision committed: ${decision.toUpperCase()}`, "success");
+
+          await loadAssets();
+
+          await selectAsset(selectedAsset.asset_id);
+
+        } else {
+
+          const err = await resp.json().catch(() => ({}));
+
+          setFeedback("review-feedback", `Review submission rejected: ${err.error || resp.statusText}`, "error");
+
+        }
+
+      } catch (e) {
+
+        setFeedback("review-feedback", `Review submission error: ${e.message}`, "error");
+
+      }
+
+    }
+
+    // Publication Actions
+
+    async function publishRelease() {
+      if (!selectedAsset || !currentReport) return;
+      const assetId = selectedAsset.asset_id, revisionId = selectedAsset.asset_revision_id;
+      const btn = document.getElementById('btn-publish-release');
+      btn.disabled = true;
+      btn.textContent = 'Signing contract…';
+      try {
+        const packResponse = await fetch(`${API_BASE}/api/v1/demo/packaging/${encodeURIComponent(assetId)}`, {signal:AbortSignal.timeout(10000)});
+        const packaging = await packResponse.json();
+        if (!packResponse.ok) throw new Error(packaging.error || 'Exact packaged playlist unavailable.');
+        const resp = await fetch(`${API_BASE}/api/v1/releases/publish`, {
+          method:'POST', headers:{'Content-Type':'application/json'}, signal:AbortSignal.timeout(10000),
+          body:JSON.stringify({asset_revision_id:revisionId,
+            rendition_set_id:document.getElementById('input-rendition-id').value,
+            playlist_manifest:packaging.playlist_manifest, media_uri:packaging.media_uri})
+        });
+        const release = await resp.json();
+        if (!resp.ok) throw new Error(release.error || 'Publication rejected.');
+        if (!selectedAsset || selectedAsset.asset_id !== assetId) return;
+        activeRelease = release;
+        document.getElementById('pub-status-tag').className = 'status-tag tag-published';
+        document.getElementById('pub-status-tag').textContent = packaging.source_mapping_verified ? 'SIGNED FIXTURE' : 'SIGNED REFERENCE';
+        document.getElementById('published-release-details').style.display = 'block';
+        document.getElementById('pub-release-id-box').textContent = `Release: ${release.release_id}\nDigest: ${release.manifest_digest}\n${packaging.scope}`;
+        document.getElementById('pub-intent-cmd-box').textContent = release.harness_intent_command;
+        setFeedback('publish-feedback', packaging.source_mapping_verified ? 'Contract signed against the bundled fixture playlist. Native verification is separate.' : 'Reference contract signed. Source-to-output equivalence is unverified; this is not a verified native handoff.', packaging.source_mapping_verified ? 'success' : 'warning');
+      } catch(e) {
+        setFeedback('publish-feedback', `Publication stopped: ${e.message}`, 'error');
+      } finally {
+        btn.disabled = !currentReport || currentReport.review_state !== 'approved';
+        btn.textContent = 'Sign & Publish Ed25519 Sidecar';
+      }
+    }
+
+    function copyIntentCmd() {
+
+      if (!activeRelease) return;
+
+      navigator.clipboard.writeText(activeRelease.harness_intent_command);
+
+      alert("Android TV launch command copied to clipboard!");
+
+    }
+
+    function downloadSidecar() {
+
+      if (!activeRelease) return;
+
+      const blob = new Blob([activeRelease.sidecar_json], { type: "application/json" });
+
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+
+      a.download = `${activeRelease.release_id}-sidecar.json`;
+
+      a.click();
+
+    }
+
+    function parseVttCues(vttText) {
+
+      if (!vttText) return [];
+
+      const cues = [];
+
+      const lines = vttText.split(/\r?\n/);
+
+      const timeRegex = /(?:(\d{2}):)?(\d{2}):(\d{2})[.,](\d{3})\s*-->\s*(?:(\d{2}):)?(\d{2}):(\d{2})[.,](\d{3})/;
+
+      let i = 0;
+
+      while (i < lines.length) {
+
+        const line = lines[i].trim();
+
+        const m = line.match(timeRegex);
+
+        if (m) {
+
+          const h1 = parseInt(m[1] || "0", 10);
+
+          const m1 = parseInt(m[2], 10);
+
+          const s1 = parseInt(m[3], 10);
+
+          const ms1 = parseInt(m[4], 10);
+
+          const startMs = (h1 * 3600 + m1 * 60 + s1) * 1000 + ms1;
+
+          const h2 = parseInt(m[5] || "0", 10);
+
+          const m2 = parseInt(m[6], 10);
+
+          const s2 = parseInt(m[7], 10);
+
+          const ms2 = parseInt(m[8], 10);
+
+          const endMs = (h2 * 3600 + m2 * 60 + s2) * 1000 + ms2;
+
+          let text = "";
+
+          let j = i + 1;
+
+          while (j < lines.length && lines[j].trim() && !lines[j].includes("-->")) {
+
+            text += (text ? " " : "") + lines[j].trim();
+
+            j++;
+
+          }
+
+          cues.push({ startMs, endMs, text });
+
+          i = j;
+
+        } else {
+
+          i++;
+
+        }
+
+      }
+
+      return cues;
+
+    }
+
+    // Timeline Rendering & Scrubbing
+
+    function renderTimeline() {
+
+      if (!selectedAsset) return;
+
+      const durationMs = selectedAsset.duration_ms || 2000;
+
+      document.getElementById("timeline-scale-label").textContent = `Duration: ${durationMs} ms`;
+
+      // Ruler
+
+      const rulerTrack = document.getElementById("timeline-ruler-track");
+
+      rulerTrack.innerHTML = "";
+
+      const stepMs = durationMs <= 5000 ? 500 : (durationMs <= 30000 ? 5000 : 20000);
+
+      for (let t = 0; t <= durationMs; t += stepMs) {
+
+        const pct = (t / durationMs) * 100;
+
+        const tick = document.createElement("div");
+
+        tick.className = "ruler-tick";
+
+        tick.style.left = `${pct}%`;
+
+        const label = document.createElement("div");
+
+        label.className = "ruler-label tabular-nums";
+
+        label.style.left = `${pct}%`;
+
+        label.textContent = `${(t / 1000).toFixed(1)}s`;
+
+        rulerTrack.appendChild(tick);
+
+        rulerTrack.appendChild(label);
+
+      }
+
+      // Hazards Track
+
+      const hazardTrack = document.getElementById("track-hazards");
+
+      hazardTrack.querySelectorAll(".timeline-hazard-block, .timeline-safe-margin").forEach(el => el.remove());
+
+      if (currentReport && currentReport.findings) {
+
+        currentReport.findings.forEach(f => {
+
+          const leftPct = (f.start_ms / durationMs) * 100;
+
+          const widthPct = ((f.end_ms - f.start_ms) / durationMs) * 100;
+
+          const marginWidthPct = ((f.proposed_safe_resume_ms - f.end_ms) / durationMs) * 100;
+
+          // Hazard block
+
+          const block = document.createElement("div");
+
+          block.className = `timeline-hazard-block ${selectedFinding && selectedFinding.interval_id === f.interval_id ? "active" : ""}`;
+
+          block.style.left = `${leftPct}%`;
+
+          block.style.width = `${Math.max(1, widthPct)}%`;
+
+          block.title = `${f.interval_id}: ${f.types.join(", ")} (${f.start_ms}ms - ${f.end_ms}ms)`;
+
+          block.onclick = (e) => {
+
+            e.stopPropagation();
+
+            selectedFinding = f;
+
+            seekToMs(f.start_ms);
+
+            renderTimeline();
+
+          };
+
+          hazardTrack.appendChild(block);
+
+          // Safe margin
+
+          if (marginWidthPct > 0) {
+
+            const margin = document.createElement("div");
+
+            margin.className = "timeline-safe-margin";
+
+            margin.style.left = `${leftPct + widthPct}%`;
+
+            margin.style.width = `${marginWidthPct}%`;
+
+            hazardTrack.appendChild(margin);
+
+          }
+
+        });
+
+      }
+
+      // Subtitles Track (Grounded from actual VTT cues)
+
+      const subTrack = document.getElementById("track-subtitles");
+
+      subTrack.querySelectorAll(".timeline-subtitle-block").forEach(el => el.remove());
+
+      const vttCues = parseVttCues(selectedAsset ? selectedAsset.subtitles_vtt : "");
+
+      if (vttCues.length > 0) {
+
+        vttCues.forEach(cue => {
+
+          if (cue.endMs > cue.startMs && durationMs > 0) {
+
+            const leftPct = (cue.startMs / durationMs) * 100;
+
+            const widthPct = Math.max(1.5, ((cue.endMs - cue.startMs) / durationMs) * 100);
+
+            const subBlock = document.createElement("div");
+
+            subBlock.className = "timeline-subtitle-block";
+
+            subBlock.style.left = `${leftPct}%`;
+
+            subBlock.style.width = `${widthPct}%`;
+
+            subBlock.textContent = cue.text;
+
+            subBlock.title = `${cue.startMs}ms - ${cue.endMs}ms: ${cue.text}`;
+
+            subTrack.appendChild(subBlock);
+
+          }
+
+        });
+
+      }
+
+    }
+
+    function onTimelineClick(e) {
+
+      if (!selectedAsset) return;
+
+      const rect = document.getElementById("timeline-viewport").getBoundingClientRect();
+
+      const clickX = e.clientX - rect.left;
+
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+
+      const targetMs = Math.round(pct * selectedAsset.duration_ms);
+
+      seekToMs(targetMs);
+
+    }
+
+    function seekToMs(ms) {
+
+      if (!selectedAsset) return;
+
+      currentPositionMs = Math.max(0, Math.min(selectedAsset.duration_ms, ms));
+
+      updatePlayheadVisuals();
+
+      renderFrameCanvas();
+
+    }
+
+    function stepFrame(delta) {
+
+      if (!selectedAsset) return;
+
+      const frameDurationMs = 1000 / (selectedAsset.fps || 30);
+
+      seekToMs(currentPositionMs + (delta * frameDurationMs));
+
+    }
+
+    function jumpToHazard() {
+
+      if (currentReport && currentReport.findings && currentReport.findings.length > 0) {
+
+        seekToMs(currentReport.findings[0].start_ms);
+
+      }
+
+    }
+
+    function togglePlayback() {
+
+      isPlaying = !isPlaying;
+
+      document.getElementById("play-pause-btn").textContent = isPlaying ? "⏸" : "▶";
+
+      if (isPlaying) {
+
+        lastTickTime = performance.now();
+
+        animationFrameId = requestAnimationFrame(playbackLoop);
+
+      } else {
+
+        cancelAnimationFrame(animationFrameId);
+
+      }
+
+    }
+
+    function playbackLoop(now) {
+
+      if (!isPlaying || !selectedAsset) return;
+
+      const elapsed = now - lastTickTime;
+
+      lastTickTime = now;
+
+      currentPositionMs += elapsed;
+
+      if (currentPositionMs >= selectedAsset.duration_ms) {
+
+        currentPositionMs = 0;
+
+      }
+
+      updatePlayheadVisuals();
+
+      renderFrameCanvas();
+
+      animationFrameId = requestAnimationFrame(playbackLoop);
+
+    }
+
+    function updatePlayheadVisuals() {
+
+      if (!selectedAsset) return;
+
+      const pct = (currentPositionMs / (selectedAsset.duration_ms || 1)) * 100;
+
+      document.getElementById("timeline-playhead").style.left = `${pct}%`;
+
+      // Timecode HUD
+
+      const s = Math.floor(currentPositionMs / 1000);
+
+      const ms = Math.floor(currentPositionMs % 1000);
+
+      const frames = Math.floor((ms / 1000) * (selectedAsset.fps || 30));
+
+      const tc = `00:00:${String(s).padStart(2, '0')}:${String(frames).padStart(2, '0')}`;
+
+      document.getElementById("hud-timecode").textContent = tc;
+
+      document.getElementById("transport-timecode").textContent = `${Math.round(currentPositionMs)} ms / ${selectedAsset.duration_ms} ms`;
+
+      // Active hazard check
+
+      let inHazard = false;
+
+      if (currentReport && currentReport.findings) {
+
+        inHazard = currentReport.findings.some(f => currentPositionMs >= f.start_ms && currentPositionMs <= f.end_ms);
+
+      }
+
+      document.getElementById("hud-hazard-pill").style.display = inHazard ? "block" : "none";
+
+      // Subtitle check from actual VTT cues or grounded context note
+
+      let activeSubText = "";
+
+      const vttCues = parseVttCues(selectedAsset ? selectedAsset.subtitles_vtt : "");
+
+      const activeCue = vttCues.find(c => currentPositionMs >= c.startMs && currentPositionMs <= c.endMs);
+
+      if (activeCue) {
+
+        activeSubText = activeCue.text;
+
+      } else if (inHazard && currentReport && currentReport.context_notes && currentReport.context_notes.length > 0) {
+
+        const note = currentReport.context_notes.find(n => n.interval_id === inHazard.interval_id);
+
+        if (note && note.text) {
+
+          activeSubText = `[Narrative Context: ${note.text}]`;
+
+        }
+
+      }
+
+      document.getElementById("hud-subtitle").textContent = activeSubText;
+
+    }
+
+    // Neutral preview-unavailable display
+
+    function initCanvas() {
+
+      renderFrameCanvas();
+
+    }
+
+    function renderFrameCanvas() {
+
+      const canvas = document.getElementById("preview-canvas");
+
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0d1017";
+
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#e2e8f0";
+
+      ctx.font = "600 13px -apple-system, sans-serif";
+
+      ctx.textAlign = "center";
+
+      if (selectedAsset) {
+
+        ctx.fillText(`Selected Asset: ${selectedAsset.name}`, canvas.width / 2, canvas.height / 2 - 12);
+
+        ctx.fillStyle = "#94a3b8";
+
+        ctx.font = "12px -apple-system, sans-serif";
+
+        ctx.fillText("Media preview unavailable · Safe static display", canvas.width / 2, canvas.height / 2 + 12);
+
+        ctx.fillText("Deterministic findings and metrics rendered in inspector below", canvas.width / 2, canvas.height / 2 + 32);
+
+      } else {
+
+        ctx.fillText("Select an asset from the catalog rail to inspect", canvas.width / 2, canvas.height / 2);
+
+      }
+
+    }
+
+    // Incidents Lab View
+
+    async function loadIncidents() {
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/incidents`);
+
+        const data = await resp.json();
+
+        incidents = data.incidents || [];
+
+        renderIncidentsTable();
+
+      } catch (e) {
+
+        console.error("Failed to load incidents", e);
+
+      }
+
+    }
+
+    function renderIncidentsTable() {
+
+      const tbody = document.getElementById("incidents-table-body");
+
+      tbody.innerHTML = "";
+
+      incidents.forEach(inc => {
+
+        const rec = inc.receipt || inc;
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+
+          <td class="tabular-nums" style="font-weight: 700; color: #fff;">${escapeHtml(inc.incident_id)}</td>
+
+          <td><span class="status-tag tag-rejected">${escapeHtml(rec.diagnostic_code || "UNKNOWN")}</span></td>
+
+          <td><span class="status-tag tag-hazard">${escapeHtml(rec.recovery_status || "UNKNOWN")}</span></td>
+
+          <td class="tabular-nums">${(rec.mismatch_fields || []).join(", ")}</td>
+
+          <td class="tabular-nums">${rec.position_delta_ms ?? 0} ms</td>
+
+          <td>${escapeHtml(rec.retest_fixture_id || "STANDARD")}</td>
+
+          <td><button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="viewIncidentDetail('${inc.incident_id}')">Investigate</button></td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+      });
+
+    }
+
+    async function viewIncidentDetail(incidentId) {
+
+      activeIncident = incidents.find(i => i.incident_id === incidentId);
+
+      if (!activeIncident) return;
+
+      document.getElementById("incident-detail-panel").style.display = "block";
+
+      document.getElementById("detail-incident-title").textContent = `Incident Investigation: ${activeIncident.incident_id}`;
+
+      document.getElementById("detail-receipt-digest").textContent = activeIncident.receipt_digest || "sha256:...";
+
+      // Load advisory
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/incidents/${incidentId}/advisory`);
+
+        const adv = await resp.json();
+
+        const hyp = (adv.labeled_hypotheses || []).map(h => `&bull; ${escapeHtml(h)}`).join("<br>");
+
+        document.getElementById("advisory-hypotheses").innerHTML = `<strong>Root Cause Hypotheses:</strong><br>${hyp}`;
+
+        document.getElementById("advisory-next-check").textContent = `Allowable Next Action: ${adv.permitted_next_check}`;
+
+      } catch (e) {
+
+        document.getElementById("advisory-hypotheses").textContent = "Advisory unavailable";
+
+      }
+
+    }
+
+    async function runRetestOnActiveIncident() {
+
+      if (!activeIncident) return;
+
+      const traceBox = document.getElementById("detail-retest-trace");
+
+      traceBox.textContent = "Executing deterministic retest simulation...";
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/incidents/${activeIncident.incident_id}/retest`, { method: "POST" });
+
+        const res = await resp.json();
+
+        if (!resp.ok || !res.retest_execution) throw new Error(res.error || 'Retest response missing');
+        const execution = res.retest_execution;
+        traceBox.textContent = `Retest: ${execution.test_status}\nResult: ${execution.verification_result}\nDetail: ${execution.detail}\nTimestamp: ${execution.executed_at_iso}\nScope: ${execution.evidence_scope}\nNative player repair verified: ${execution.player_fix_verified}`;
+
+      } catch (e) {
+
+        traceBox.textContent = "Retest execution failed";
+
+      }
+
+    }
+
+    // Releases Registry View
+
+    async function loadReleases() {
+
+      try {
+
+        const resp = await fetch(`${API_BASE}/api/v1/releases`);
+
+        const data = await resp.json();
+
+        renderReleasesTable(data.releases || []);
+
+      } catch (e) {
+
+        console.error("Failed to load releases", e);
+
+      }
+
+    }
+
+    function renderReleasesTable(releases) {
+
+      const tbody = document.getElementById("releases-table-body");
+
+      tbody.innerHTML = "";
+
+      releases.forEach(rel => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+
+          <td class="tabular-nums" style="font-weight: 700; color: var(--bronze);">${escapeHtml(rel.release_id)}</td>
+
+          <td>${escapeHtml(rel.rendition_set_id)}</td>
+
+          <td class="tabular-nums">${escapeHtml(rel.manifest_digest.slice(0, 24))}...</td>
+
+          <td><span class="status-tag tag-clean">${escapeHtml(rel.signing_alg)}</span> ${escapeHtml(rel.key_id)}</td>
+
+          <td class="tabular-nums">${rel.context_notes_count}</td>
+
+          <td class="tabular-nums">${escapeHtml(rel.published_at_iso)}</td>
+
+          <td><button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="downloadReleaseSidecar('${rel.release_id}')">Sidecar JSON</button></td>
+
+        `;
+
+        tbody.appendChild(tr);
+
+      });
+
+    }
+
+    function downloadReleaseSidecar(releaseId) {
+
+      window.open(`${API_BASE}/api/v1/releases/${releaseId}/sidecar.json`, "_blank");
+
+    }
+
+    // Ingest Modal
+
+    function openImportModal() { document.getElementById("import-modal").style.display = "flex"; }
+
+    function closeImportModal() { document.getElementById("import-modal").style.display = "none"; }
+
+    async function submitImportAsset() {
+
+      const name = document.getElementById("modal-ast-name").value;
+
+      const path = document.getElementById("modal-ast-path").value;
+
+      const bytes = document.getElementById("modal-ast-bytes").value;
+
+      const vtt = document.getElementById("modal-ast-vtt").value;
+
+      if (!name) { alert("Asset name is required"); return; }
+
+      try {
+
+        const payload = {
+
+          name: name,
+
+          source_type: path ? "managed_video" : "synthetic_fixture",
+
+          source_path: path || null,
+
+          raw_bytes: bytes || "fixture-dummy-bytes",
+
+          subtitles_vtt: vtt || null
+
+        };
+
+        const resp = await fetch(`${API_BASE}/api/v1/assets`, {
+
+          method: "POST",
+
+          headers: { "Content-Type": "application/json" },
+
+          body: JSON.stringify(payload)
+
+        });
+
+        if (resp.ok) {
+
+          closeImportModal();
+
+          await loadAssets();
+
+          alert("Asset registered successfully!");
+
+        } else {
+
+          const err = await resp.json();
+
+          alert(`Import rejected: ${err.error}`);
+
+        }
+
+      } catch (e) {
+
+        alert("Failed to register asset");
+
+      }
+
+    }
+
+    function escapeHtml(str) {
+
+      return String(str || "").replace(/[&<>"']/g, m => ({
+
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+
+      }[m]));
+
+    }
+
+  </script>
+
+</body>
+
+</html>
+

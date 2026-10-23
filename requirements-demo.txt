@@ -1,0 +1,3 @@
+# Local operator console and deterministic pipeline; no AWS SDK or Android SDK needed.
+numpy>=1.26.0
+cryptography>=43.0.0

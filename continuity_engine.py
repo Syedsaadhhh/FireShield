@@ -655,7 +655,7 @@ def validate_and_parse_incident_receipt(
             for track_k in ("selected_subtitle_track_id", "selected_audio_track_id"):
                 if track_k in state_obj and state_obj[track_k] is not None:
                     t_val = state_obj[track_k]
-                    if not isinstance(t_val, str) or len(t_val) > 128:
+                    if not isinstance(t_val, str) or len(t_val) > 128 or "://" in t_val:
                         raise ContinuityError(f"Invalid {track_k} in {state_key}")
             if "presentation_mode" in state_obj:
                 pm = state_obj["presentation_mode"]
@@ -696,6 +696,21 @@ def validate_and_parse_incident_receipt(
     retest_fix = data.get("retest_fixture_id")
     if not isinstance(retest_fix, str) or retest_fix not in KNOWN_RETEST_FIXTURES:
         raise ContinuityError(f"Receipt references unknown retest fixture: {retest_fix!r}")
+    if strict:
+        expected_fixture = "BENIGN_SUBTITLE_CONTINUITY_V1"
+        for field, fixture in (
+            ("captions_enabled", "DROPPED_CAPTION_FAULT_V1"),
+            ("selected_subtitle_track_id", "DROPPED_CAPTION_FAULT_V1"),
+            ("rendition_playlist_sha256", "STALE_CUT_INTRO_DRIFT_V1"),
+            ("position_ms", "POSITION_OVERSHOOT_FAULT_V1"),
+            ("selected_audio_track_id", "DROPPED_AUDIO_FAULT_V1"),
+            ("presentation_mode", "PRESENTATION_MODE_FAULT_V1"),
+        ):
+            if field in seen_mismatches:
+                expected_fixture = fixture
+                break
+        if retest_fix != expected_fixture:
+            raise ContinuityError("Retest fixture does not match the reported mismatch fields")
 
     # receipt_digest
     if "receipt_digest" in data:

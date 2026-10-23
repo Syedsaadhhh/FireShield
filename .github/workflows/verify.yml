@@ -4,6 +4,14 @@ on:
   pull_request:
   push:
     branches: [main, 'codex/**']
+    paths:
+      - '**/*.py'
+      - 'requirements*.txt'
+      - 'pytest.ini'
+      - 'verification_pipeline.json'
+      - 'tests/**'
+      - 'fireos/**'
+      - '.github/workflows/verify.yml'
   workflow_dispatch:
 
 permissions:

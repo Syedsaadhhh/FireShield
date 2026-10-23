@@ -1,34 +1,33 @@
-# Secrets and local configuration
+# Local secrets and configuration
 .env
 .env.*
 !.env.example
 *.pem
 *.key
+*.jks
+*.keystore
+local.properties
 
-# Python
+# Runtime media, local signing seed, receipts and generated output
+/runtime_data/
+/data/catalog/
+/evidence/
+/screenshots/
+/tmp_*/
+/research/
+/reports/
+/docs/research/
+/docs/validation/
+/third_party/idea-validation-agents/
 __pycache__/
 *.py[cod]
 .venv/
 .pytest_cache/
-
-# JavaScript and generated output
+.gradle/
+.kotlin/
 node_modules/
 dist/
 build/
 coverage/
-
-# Android and local tooling
-.gradle/
-local.properties
-*.jks
-*.keystore
 .DS_Store
 Thumbs.db
-
-# Research and business deliverables are maintained separately
-/research/
-/reports/
-/evidence/
-/docs/research/
-/docs/validation/
-/third_party/idea-validation-agents/

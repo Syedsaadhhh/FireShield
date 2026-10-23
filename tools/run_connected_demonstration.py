@@ -19,13 +19,15 @@ import pathlib
 import subprocess
 import sys
 import time
+import uuid
 
 # Ensure workspace root is in python path
 WORKSPACE_ROOT = pathlib.Path(__file__).resolve().parents[1]
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
-from continuity_engine import compute_receipt_digest, validate_and_parse_incident_receipt
+from continuity_engine import (compute_receipt_digest, validate_and_parse_incident_receipt,
+    create_checkpoint, ObservedPlayerState, verify_recovery, generate_incident_receipt)
 from pipeline_service import LocalPipelineService, PipelineServiceError
 from retest_harness import run_retest_scenario
 from state_engine import (
@@ -203,11 +205,30 @@ def main() -> int:
     # -------------------------------------------------------------------------
     log_header("PART 3: FIRETRACE RECOVERY INVESTIGATION & REGRESSION RETEST")
 
-    sample_receipt_path = WORKSPACE_ROOT / "sample_incident_receipt.json"
-    raw_receipt = sample_receipt_path.read_text(encoding="utf-8")
+    # Generate this run's evidence from the same published source and playlist.
+    # These are explicit reference-model observations, not native-device telemetry.
+    checkpoint = create_checkpoint(asset_revision_id=hazard_rev,
+        rendition_set_id=release.rendition_set_id,
+        rendition_playlist_sha256=release.rendition_playlist_sha256,
+        position_ms=2500, captions_enabled=True,
+        selected_subtitle_track_id="sub-en-cc", selected_audio_track_id="audio-en")
+    observed = ObservedPlayerState(position_ms=2500, captions_active=False,
+        active_subtitle_track_id=None, active_audio_track_id="audio-en",
+        active_presentation_mode="standard",
+        active_rendition_playlist_sha256=release.rendition_playlist_sha256,
+        surface_blanked=True, is_playing=False)
+    verification = verify_recovery(checkpoint, observed)
+    assert verification.status == "DIVERGENCE_DETECTED"
+    receipt = generate_incident_receipt(incident_id="reference-" + uuid.uuid4().hex,
+        fixture_id=hazard_ast["asset_id"], verification_result=verification,
+        platform_name="Python-reference-model")
+    raw_receipt = json.dumps(receipt)
     parsed_receipt = validate_and_parse_incident_receipt(raw_receipt, strict=True)
+    receipt_path = WORKSPACE_ROOT / "runtime_data" / "connected-demo-receipt.json"
+    receipt_path.parent.mkdir(parents=True, exist_ok=True)
+    receipt_path.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
 
-    log_step("Step 3.1: FireTrace Native Incident Ingestion",
+    log_step("Step 3.1: Fresh Reference Recovery Incident",
              f"Ingesting incident receipt '{parsed_receipt['incident_id']}'...")
     print(f"    Diagnostic Code  : {parsed_receipt['diagnostic_code']}")
     print(f"    Recovery Status  : {parsed_receipt['recovery_status']}")
@@ -220,6 +241,7 @@ def main() -> int:
     log_step("Step 3.2: Deterministic Retest Harness Execution",
              "Running bounded retest simulation on immutable receipt...")
     retest_result = run_retest_scenario(parsed_receipt)
+    assert retest_result["test_status"] == "DETECTION_PASS"
     print(f"    Retest Status      : {retest_result['test_status']}")
     print(f"    Verification Result: {retest_result['verification_result']}")
     print(f"    Detail             : {retest_result['detail']}")
@@ -246,7 +268,7 @@ def main() -> int:
             pass
 
     print("\n[HEADLESS PIPELINE PASS] Connected Three-Part Prototype Contract Demonstration Completed Successfully!")
-    print("Native TV Run Status: UNVERIFIED / PENDING (0 active AVDs on host; 23/23 unit tests pass in headless CI)")
+    print("Native TV Run Status: not executed by this headless runner; see the exact commit's cloud emulator artifacts.")
     return 0
 
 

@@ -47,7 +47,9 @@ data class FireShieldHarnessConfig(
     val presentationMode: String = "standard"
 ) {
     companion object {
-        fun fromIntentOrAssets(intent: Intent?, assets: AssetManager): FireShieldHarnessConfig {
+        fun fromIntentOrAssets(suppliedIntent: Intent?, assets: AssetManager, allowDebugOverrides: Boolean = false): FireShieldHarnessConfig {
+            // External launcher callers cannot replace the release app's trust root.
+            val intent = if (allowDebugOverrides) suppliedIntent else null
             val releaseFilePath = intent?.getStringExtra("fireshield.release_file")
             val releaseJson = if (!releaseFilePath.isNullOrBlank()) {
                 val f = File(releaseFilePath)
@@ -504,7 +506,8 @@ class MainActivity : Activity() {
         recoveryReadiness.clear()
         playerView.player = player
 
-        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets)
+        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets,
+            allowDebugOverrides = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
         activeConfig = cfg
 
         val port = Media3ExoPlayerController(
@@ -856,7 +859,7 @@ class MainActivity : Activity() {
             Log.i("FireTrace", "RECOVERY_VERIFIED token=$recoveryOperationToken posMs=${observed.positionMs} captions=${observed.captionsActive} audio=${observed.activeAudioTrackId}")
 
             verificationTextView.setTextColor(Color.GREEN)
-            verificationTextView.text = "VERIFIED MATCH: Restored pos=${observed.positionMs}ms, caps=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}"
+            verificationTextView.text = "SELECTION MATCH: pos=${observed.positionMs}ms, captions=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}. Output not verified."
         } else {
             // Fail closed: latch divergence, pause player, keep shutter blanked
             isDivergenceLatched = true
