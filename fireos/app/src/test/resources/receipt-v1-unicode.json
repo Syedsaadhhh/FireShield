@@ -1,0 +1,39 @@
+{
+  "receipt_schema_version": 1,
+  "incident_id": "interop-v1",
+  "fixture_id": "publisher-owned-fixture",
+  "timestamp_iso": "2026-10-15T00:00:00Z",
+  "environment": {
+    "app_version": "0.2.0",
+    "platform": "FireOS-Android-Leanback"
+  },
+  "recovery_status": "DIVERGENCE_DETECTED",
+  "diagnostic_code": "ERR_MISMATCH_CAPTIONS_ENABLED",
+  "mismatch_fields": [
+    "captions_enabled"
+  ],
+  "position_delta_ms": 0,
+  "expected_state": {
+    "position_ms": 42000,
+    "captions_enabled": true,
+    "selected_subtitle_track_id": "sub-Français-日本語-😀",
+    "selected_audio_track_id": "0:1/15",
+    "presentation_mode": "standard",
+    "rendition_playlist_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "observed_state": {
+    "position_ms": 42000,
+    "captions_enabled": false,
+    "selected_subtitle_track_id": null,
+    "selected_audio_track_id": "0:1/15",
+    "presentation_mode": "standard",
+    "rendition_playlist_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "privacy_attestation": {
+    "contains_pii": false,
+    "contains_video_buffers": false,
+    "contains_auth_tokens": false
+  },
+  "retest_fixture_id": "DROPPED_CAPTION_FAULT_V1",
+  "receipt_digest": "sha256:4eec797fa775f5aa0507575fc0a66180209a709b70028a192f752c33b0879da6"
+}

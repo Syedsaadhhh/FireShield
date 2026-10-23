@@ -46,7 +46,10 @@ data class FireShieldHarnessConfig(
     val presentationMode: String = "standard"
 ) {
     companion object {
-        fun fromIntentOrAssets(intent: Intent?, assets: AssetManager): FireShieldHarnessConfig {
+        fun fromIntentOrAssets(suppliedIntent: Intent?, assets: AssetManager, allowDebugOverrides: Boolean = false): FireShieldHarnessConfig {
+            // The launcher Activity is exported. An external caller must never
+            // choose the trust root, sidecar, media identity or timeout in release.
+            val intent = if (allowDebugOverrides) suppliedIntent else null
             val provenanceAsset = intent?.getStringExtra("fireshield.provenance_asset_path")
                 ?: "hls/PROVENANCE_BENIGN.json"
             val provenanceJson = JSONObject(
@@ -343,7 +346,8 @@ class MainActivity : Activity() {
         recoveryReadiness.clear()
         playerView.player = player
 
-        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets)
+        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets,
+            allowDebugOverrides = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
         activeConfig = cfg
 
         val port = Media3ExoPlayerController(
@@ -682,10 +686,10 @@ class MainActivity : Activity() {
             pendingRecoveryCheckpoint = null
             // Only the publisher gate owns playback release and shutter state.
             updateDiagnosticReadout(bridge.onPlaybackTick(player.currentPosition, SystemClock.elapsedRealtime()))
-            Log.i("FireTrace", "RECOVERY_VERIFIED token=$recoveryOperationToken posMs=${observed.positionMs} captions=${observed.captionsActive} audio=${observed.activeAudioTrackId}")
+            Log.i("FireTrace", "RECOVERY_VERIFIED evidence=PLAYER_SELECTION outputVerified=false token=$recoveryOperationToken posMs=${observed.positionMs} captions=${observed.captionsActive} audio=${observed.activeAudioTrackId}")
 
             verificationTextView.setTextColor(Color.GREEN)
-            verificationTextView.text = "VERIFIED MATCH: Restored pos=${observed.positionMs}ms, caps=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}"
+            verificationTextView.text = "SELECTION MATCH: pos=${observed.positionMs}ms, captions=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}. Output not verified."
         } else {
             // Fail closed: latch divergence, pause player, keep shutter blanked
             isDivergenceLatched = true

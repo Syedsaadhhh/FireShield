@@ -1,98 +1,70 @@
-# FireShield — Version-Bound Hazard Intervention Contract, B2B Release Gate, & Native Fire OS / Android TV Harness
+# FireShield
 
-> **Status:** `VERIFIED LOCAL` (`58 passed` Python tests + `22 passed` Kotlin JUnit tests) & `BUILT NATIVE` (`app-debug.apk` compiled for Fire OS / Android TV Media3 ExoPlayer, SHA-256: `8934409D7DE5F4B9C404B6869DE8A78C7B2E7923A782899A95BE8CB6E03185F2`).  
-> **`RUN ON SIMULATOR OR DEVICE`:** **VERIFIED RUNTIME** on Android TV Emulator (`FireShield_TV_API28`, Android 9 API 28 x86 via WHPX QEMU on port 5556; note: [Devpost FAQ](https://amazonappdev2026.devpost.com/details/faqs) explicitly permits an Android TV Emulator for Fire TV track submission testing). All 11 runtime scenarios passed (`nominal_playback`, `process_death_recovery`, `background_foreground`, `dropped_subtitles`, `dropped_audio`, `stale_playlist`, `presentation_mismatch`, `seek_overshoot`, `readiness_timeout`, `corrupt_checkpoint`, `stale_asset_revision`).  
-> **`AWS DEPLOYED`:** Blocked (no live AWS credentials or provisioned cloud resources; dry-run planner and 6-tier readiness inspector verified locally).  
-> **Iteration Cadence:** This repository represents one foundational layer in a multi-iteration B2B product build—not a disposable single-app MVP, not a certified medical device, and not broadcast regulatory certification (HardingFPA/Ofcom/ITU-R BT.1702-3).  
-> See [`BUILD_STATUS.md`](BUILD_STATUS.md), [`RESUME_STATE.md`](RESUME_STATE.md), [`AWS_SETUP.md`](AWS_SETUP.md) for complete scope boundaries, preserved B2B backlog, and risk registers.
+**Screen a release. Intervene on the right edition. Verify what survives an interruption.**
 
----
+FireShield combines a visual screening prototype, Synaptic Shield's version-bound player intervention, and FireTrace's playback continuity checks in a publisher-controlled Fire TV / Android TV application.
 
-## 1. B2B Problem Scope & First-Class Architectural Boundaries
+The intended user is a streaming publisher that controls its catalog and player. The goal is to connect editorial decisions to playback behavior, then detect when recovery silently loses captions, audio selection, presentation settings, or the expected cut of the content.
 
-**FireShield** is a version-bound visual-hazard release contract and player intervention layer for **streaming publishers and multi-tenant media platforms that control their own Fire TV / Android TV player and catalog**.
+## Three connected layers
 
-1. **Publisher-Controlled Scope & Multi-Tenant Isolation:** A Fire TV application cannot inspect or modify protected frames inside third-party apps (such as Prime Video or Netflix) due to OS isolation, DRM, and private GPU buffers. FireShield operates strictly on media authorized, packaged, and played by the publisher's own player, enforcing strict `tenant_id` isolation across release records (`get_tenant_records`), sidecar validation, and structured audit trails (`get_tenant_audit_log`, `FireShieldAuditSink`).
-2. **Asymmetric Ed25519 Sidecar Contract (`schema_version: 2`) with Key Rotation & Revocation:** Client devices do not hash gigabytes of DRM-protected video buffers in memory, nor do they hold shared symmetric secrets. The release gate binds `tenant_id`, `asset_revision_id`, `rendition_set_id`, `rendition_playlist_sha256`, `signing_alg: "Ed25519"`, and `key_id` into a canonical JSON digest (`manifest_digest`) signed with an Ed25519 private key. Clients verify the contract using a rotatable `trusted_public_keys` ring and enforce explicit `revoked_key_ids` revocation (`update_key_ring` / `updateKeyRing`), rejecting downgrades to `schema_version: 1` (HMAC) by default.
-3. **Asynchronous, Fail-Closed Player Gate & Checkpoint Continuity:** Hardware decoders complete seeks asynchronously (`Player.Listener.onPositionDiscontinuity`). Both [`firetv_player_adapter.py`](firetv_player_adapter.py) and [`FireShieldExoPlayerBridge.kt`](fireos/app/src/main/java/com/fireshield/fireos/FireShieldExoPlayerBridge.kt) keep playback paused and the shutter surface blanked while an async seek is in flight, unblanking only after `onPositionDiscontinuity(DISCONTINUITY_REASON_SEEK)` confirms `actual_position_ms >= safe_resume_ms` with matching `seek_token`, active rendition identity, and within timeout. On checkpoint recovery (`ContinuityCheckpoint.kt`, `RecoveryVerifier.kt`, `RecoveryReadinessGate.kt`), expected presentation policies (captions, subtitle track, audio track, presentation mode) are checked against actual observed tracks; any dropped track, intro cut drift, or position overshoot fails closed and emits a canonical JSON incident receipt with a SHA-256 integrity digest (`computeReceiptDigest`).
-4. **Human-in-the-Loop Release Gate & Benign Media Defaults:** Candidate intervals from offline screening are emitted in `review_state="pending_review"`. No synthetic confidence score auto-publishes an asset; a human editor must explicitly record `"approved"` or `"rejected"`. Hazard screening fixtures are strictly headless; the runtime default media fixture is a calm 120-second 0Hz baseline stream (`benign_master.m3u8`, `benign_variant.m3u8`, `benign_seg0.ts`) with WebVTT subtitles (`subtitles_en.vtt`) bound by signed Ed25519 contract (`benign_sidecar_v2.json`).
+| Layer | Implemented mechanism | What it establishes |
+| --- | --- | --- |
+| Visual screening | Python/NumPy SDR luminance, saturated-red, and spatial-pattern analysis; headless FFmpeg decoding; explicit editorial approval | Candidate intervals for review, bound to a source revision |
+| Synaptic Shield | Ed25519-signed sidecar; tenant, asset, rendition and playlist binding; asynchronous Media3 seek callbacks; paused and blanked surface during uncertain transitions | A player acts on the contract for the selected edition and checks the seek landing before releasing its shutter |
+| FireTrace | Atomic playback checkpoints; expected versus observed player-selection comparison; bounded incident receipts and reference retests | Dropped captions/audio, changed cuts, position drift and presentation mismatch can be detected rather than silently accepted |
 
----
+The native app uses Kotlin, Android Media3 ExoPlayer, local HLS, and WebVTT. The reference engine uses Python, NumPy and cryptography. The included sample media is publisher-owned synthetic material; hazardous screening fixtures are analyzed headlessly.
 
-## 2. Repository Structure
+## Current source and verification
 
-| File / Directory | Purpose & Verification Tier |
-| :--- | :--- |
-| [`state_engine.py`](state_engine.py) | **P0 (`VERIFIED LOCAL`):** `SidecarContractValidator` & `FireShieldRuntime` enforcing `schema_version: 2` Ed25519 public-key verification, key rotation/revocation (`revoked_key_ids`, `update_key_ring`), downgrade rejection (`allow_legacy_v1_hmac=False`), interval margin checks, and fail-closed state transitions. |
-| [`continuity_engine.py`](continuity_engine.py) | **P0/Continuity (`VERIFIED LOCAL`):** Versioned atomic checkpointing, recovery verification against observed player tracks, canonical incident receipt generation with SHA-256 integrity digest (`receipt_digest`), privacy guarantees, and deterministic retest simulation. |
-| [`retest_harness.py`](retest_harness.py) | **P0/Continuity CLI (`VERIFIED LOCAL`):** Bounded retest CLI accepting native or synthetic incident receipts, validating `receipt_digest` integrity, and executing deterministic retest scenarios distinguishing `DETECTION_PASS` from `PLAYER_FIX_PASS`. |
-| [`firetv_player_adapter.py`](firetv_player_adapter.py) | **P0/P3 (`VERIFIED LOCAL`):** Asynchronous `FireShieldExoPlayerAdapter` and `AsyncInMemoryExoPlayerDouble` enforcing in-flight seek shutter blanking until `on_seek_completed_callback` verification. |
-| [`test_compliance.py`](test_compliance.py) | **P0 Tests (`VERIFIED LOCAL`):** 39 unit/adversarial tests covering Ed25519 v2 contracts, v1 downgrade rejection, key rotation, tampered payloads, and asynchronous player seek failure modes. |
-| [`test_continuity.py`](test_continuity.py) | **P0/Continuity Tests (`VERIFIED LOCAL`):** 12 tests covering atomic checkpoint persistence, tamper rejection, active recovery verification, dropped caption/audio detection, cut shift detection, privacy receipt sanitization, hostile-string rejection, receipt digest verification, presentation mode fault selection, and three-way deterministic ablation benchmark. |
-| [`screening_analyzer.py`](screening_analyzer.py) | **P1 (`VERIFIED LOCAL`):** SDR BT.709 screening prototype (`fireshield-screening-proto:0.3.0-sdr-bt709-2dfft`) with multi-orientation (`0°`, `90°`, `±45°`) slice probing + 2D FFT spectral-concentration spatial detector, headless `ffmpeg` decode, and 8-fixture benchmark (`TP=5, TN=3, FP=0, FN=0`). |
-| [`release_pipeline.py`](release_pipeline.py) | **P2 (`VERIFIED LOCAL`):** `LocalReleaseGatePipeline` (Ed25519 v2 sidecar signing, `rotate_signing_key`, `revoke_signing_key`, tenant-isolated `get_tenant_audit_log`, and timeline mapping), 6-tier `check_aws_deployment_readiness()`, and `AwsCloudReleaseGateDryRunPlanner`. |
-| [`verification_pipeline.json`](verification_pipeline.json) | **P2 (`VERIFIED LOCAL`):** Parameterized AWS Step Functions ASL definition with AWS Batch screening, `waitForTaskToken` human approval, explicit `rejected` terminal state, and MediaConvert `.sync` packaging. |
-| [`.env.example`](.env.example) & [`AWS_SETUP.md`](AWS_SETUP.md) | **P2 (`VERIFIED LOCAL`):** Non-secret environment template, IAM least-privilege role scope, SSO workflow, and cost guardrails. |
-| [`test_screening_and_pipeline.py`](test_screening_and_pipeline.py) | **P1–P3 Tests (`VERIFIED LOCAL`):** 7 integration test suites covering the 8-fixture 2D FFT benchmark, `ffmpeg` decode, v2 release pipeline, B2B key rotation/revocation & multi-tenant audit isolation, 6-tier AWS readiness probe, and async ExoPlayer contract double. |
-| [`fireos/`](fireos/app/build.gradle.kts) | **Native Fire OS / Android TV Module (`BUILT NATIVE` + `VERIFIED RUNTIME`):** Compilable Android/Kotlin Media3 ExoPlayer module ([`FireShieldContract.kt`](fireos/app/src/main/java/com/fireshield/fireos/FireShieldContract.kt), [`ContinuityCheckpoint.kt`](fireos/app/src/main/java/com/fireshield/fireos/ContinuityCheckpoint.kt), [`RecoveryVerifier.kt`](fireos/app/src/main/java/com/fireshield/fireos/RecoveryVerifier.kt), [`RecoveryReadinessGate.kt`](fireos/app/src/main/java/com/fireshield/fireos/RecoveryReadinessGate.kt), [`SelectedTrackIdentity.kt`](fireos/app/src/main/java/com/fireshield/fireos/SelectedTrackIdentity.kt), [`FireShieldExoPlayerBridge.kt`](fireos/app/src/main/java/com/fireshield/fireos/FireShieldExoPlayerBridge.kt), [`MainActivity.kt`](fireos/app/src/main/java/com/fireshield/fireos/MainActivity.kt)), 22 JUnit tests, and publisher-owned benign 120s HLS stream ([`assets/hls/`](fireos/app/src/main/assets/hls/PROVENANCE_BENIGN.json)). |
-| [`tools/verify_android_tv.py`](tools/verify_android_tv.py) | **Android TV Runtime Verification Runner:** Automated ADB test orchestrator executing 11 end-to-end scenarios on `emulator-5556`, capturing screencaps, logcat traces, native incident receipts, and piping receipts to `retest_harness.py`. |
-| [`BUILD_STATUS.md`](BUILD_STATUS.md) | **Engineering Ledger:** Five-tier verification matrix, exact commands, APK SHA-256, 11 emulator scenario results, preserved multi-iteration B2B product backlog, and non-secret AWS handoff checklist. |
+This checkout preserves the recoverable GitHub native/reference implementation and integrates the `codex/recovery-evidence-alignment` fixes. On **23 October 2026**, **81 Python tests passed** on Python 3.12 with FFmpeg available. These are reference/integration results, not a fresh claim that the native player has passed on a device.
 
----
+Later Antigravity work on the home laptop, including the completed Run 8 reported by the team, has **not been recovered or verified in this checkout**. Reconcile that workspace with this revision when it becomes available; do not replace its uncommitted files with this snapshot.
 
-## 3. Exact Verification Commands
+The cloud workflows build the native APK, run Kotlin tests, and attempt an actual Android TV emulator capture. A workflow file is a reproducibility route, not evidence that a run succeeded. Consult [Actions](https://github.com/Syedsaadhhh/FireShield/actions) and its exact commit's artifacts for results, logs, APK and recordings. The capture contains a real native debug harness, controlled fault injection, and player-selection evidence. It does not prove decoded subtitle/audio output or physical Fire TV behavior.
 
-### 3.0 Set Up a Fresh Clone
+Older counts and device claims in `BUILD_STATUS.md` and `RESUME_STATE.md` describe historical local work; they are not current verification for this checkout.
 
-Prerequisites: Python (the verification host used 3.14.4), FFmpeg on PATH for the full screening suite, and JDK 17 plus an Android SDK for the native build. Install the Android SDK platform/build tools declared in `fireos/app/build.gradle.kts`.
+## Run the reference tests
 
-```powershell
-git clone https://github.com/Syedsaadhhh/FireShield.git
-cd FireShield
+```sh
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pytest test_compliance.py test_continuity.py test_screening_and_pipeline.py -q
+# Windows: .venv\Scripts\activate
+# macOS/Linux: source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest -q
 ```
 
-For the commands below, activate this environment or replace `python` with `.\.venv\Scripts\python.exe`. Set `JAVA_HOME` to your JDK 17 installation and `ANDROID_HOME` to your Android SDK; host-specific paths in the measured commands are examples. From the repository root, the portable native command is `.\fireos\gradlew.bat -p fireos testDebugUnitTest assembleDebug --console=plain`.
+Install FFmpeg on PATH for the decode test. `requirements-dev.txt` records the dependency versions used by the source-alignment review; `requirements.txt` is the general development dependency list.
 
-Create/start an Android TV AVD before runtime verification, install `fireos/app/build/outputs/apk/debug/app-debug.apk`, and pass its actual serial from `adb devices` to the runner. Generated receipts and evidence are local outputs, produced by that runner; the retest examples below require those outputs.
+## Build and run the TV app
 
-### 3.1 Run All Python Unit & Integration Tests (`58 passed`)
-```powershell
-python -m pytest test_compliance.py test_continuity.py test_screening_and_pipeline.py -q --basetemp=tmp_pytest_run4
-```
-*(Exit code: 0, 58 passed in 41.63s)*
+Use JDK 17 and the Android SDK. The Gradle wrapper declares the build tool versions.
 
-### 3.2 Run P1 8-Fixture Screening Benchmark (`TP=5, TN=3, FP=0, FN=0`)
-```powershell
-python screening_analyzer.py
-```
-
-### 3.3 Run P2 AWS Readiness Check & Ed25519 Release Gate Dry Run
-```powershell
-python release_pipeline.py
+```sh
+# Windows
+fireos\gradlew.bat -p fireos testDebugUnitTest assembleDebug --console=plain
+# macOS/Linux
+bash fireos/gradlew -p fireos testDebugUnitTest assembleDebug --console=plain
+adb install -r fireos/app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.fireshield.fireos/.MainActivity
 ```
 
-### 3.4 Build Native Fire OS / Android TV APK & Run Kotlin JUnit4 Tests (`22 passed`)
-```powershell
-$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"
-& "C:\Users\ATEC\Desktop\FireShield\fireos\gradlew.bat" -p "C:\Users\ATEC\Desktop\FireShield\fireos" testDebugUnitTest assembleDebug --console=plain
-```
-*(Compiled APK: `fireos\app\build\outputs\apk\debug\app-debug.apk`, SHA-256: `8934409D7DE5F4B9C404B6869DE8A78C7B2E7923A782899A95BE8CB6E03185F2`)*
+For a dedicated Android TV emulator, `python tools/verify_android_tv.py --serial emulator-5554` runs the bounded debug scenarios and writes local evidence. Confirm your emulator serial first. `tools/capture_cloud_demo.py` records native playback, recovery, a dropped-caption fault and a stale-edition fault; GitHub's **Build and record Android TV demo** workflow provides a cloud route without a locally installed SDK.
 
-### 3.5 Execute Full Android TV Emulator Runtime Verification Suite (`11 of 11 Passed`)
-```powershell
-python tools/verify_android_tv.py --serial emulator-5556
-```
-*(Output: `ALL RUNTIME SCENARIOS PASSED`, results recorded in `evidence/2026-10-15-run4/runtime/runtime_results.json`)*
+## Scope
 
-### 3.6 Bounded Incident Receipt Retest Execution
-```powershell
-python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/drop_subtitles_receipt.json
-python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/drop_audio_receipt.json
-python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/cut_drift_receipt.json
-python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/presentation_mismatch_receipt.json
-python retest_harness.py --receipt-file evidence/2026-10-15-run4/runtime/seek_overshoot_receipt.json
-```
-*(Status: `DETECTION_PASS`, exit code: 0)*
+- FireShield operates inside a participating publisher's player. It does not inspect or modify Netflix, Prime Video or other protected third-party apps.
+- The screening engine is an SDR research prototype. Its small synthetic benchmark does not establish clinical efficacy, universal detection, broadcast compliance, HDR coverage or certification.
+- Checkpoint/receipt hashes detect accidental changes; they are not signatures proving a trustworthy device. Sidecar authenticity uses Ed25519 with an independently trusted public key.
+- Player selection and successful model retests do not prove rendered captions, audible audio or a repaired native player. Receipts preserve that distinction.
+- AWS orchestration and configuration examples are included. **A live AWS/Bedrock deployment is not established.** Local verification does not require AWS credentials.
+
+## Source map
+
+`screening_analyzer.py` and `release_pipeline.py` handle screening and release contracts. `state_engine.py` and `firetv_player_adapter.py` implement the reference player gate. `continuity_engine.py` and `retest_harness.py` handle continuity and bounded reference retests. `fireos/` contains the actual native TV app and tests. `tools/` contains fixture and emulator utilities. `AWS_SETUP.md`, `.env.example` and `verification_pipeline.json` describe optional cloud setup.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE). Preserve dependency licenses and media provenance when redistributing the app.

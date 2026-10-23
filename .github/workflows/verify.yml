@@ -1,0 +1,57 @@
+name: Verify source and native build
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'codex/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          python -m pip install -r requirements-dev.txt
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Run reference and boundary tests
+        run: python -m pytest -q --junitxml=python-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-results-${{ github.sha }}
+          path: python-results.xml
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install compile SDK
+        run: sdkmanager 'platforms;android-36.1' 'build-tools;36.0.0'
+      - name: Native unit tests and debug/release compilation
+        working-directory: fireos
+        run: bash gradlew testDebugUnitTest assembleDebug assembleRelease --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-results-${{ github.sha }}
+          path: |
+            fireos/app/build/test-results/
+            fireos/app/build/reports/tests/
+            fireos/app/build/outputs/apk/

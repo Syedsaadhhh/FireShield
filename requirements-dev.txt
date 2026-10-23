@@ -1,0 +1,5 @@
+# Versions exercised by the source-alignment review on Python 3.12.
+pytest==9.1.1
+cryptography==50.0.2
+numpy==2.3.5
+boto3==1.43.114
