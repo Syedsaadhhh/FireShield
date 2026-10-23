@@ -551,6 +551,7 @@ class LocalReleaseGatePipeline:
         asset_revision_id: str,
         packaging_spec: RenditionPackagingSpec,
         detector_version: str = DETECTOR_VERSION,
+        context_notes: Optional[Sequence[Dict[str, Any]]] = None,
     ) -> Tuple[str, PlaybackSessionContext]:
         """
         Verifies editorial approval, maps source intervals to the rendition's presentation
@@ -597,6 +598,36 @@ class LocalReleaseGatePipeline:
             )
 
         mapped_intervals = map_source_intervals_to_rendition(report, packaging_spec)
+
+        if context_notes:
+            notes_by_interval: Dict[str, Dict[str, Any]] = {}
+            for note in context_notes:
+                note_dict = note if isinstance(note, dict) else (note.to_sidecar_dict() if hasattr(note, "to_sidecar_dict") else dict(note))
+                inv_id = note_dict.get("interval_id")
+                if not inv_id:
+                    raise ReleaseGateError("Context note missing required 'interval_id'.")
+                if not note_dict.get("editorial_approved", False):
+                    raise ReleaseGateError(
+                        f"Publication blocked: Context note for interval '{inv_id}' has not been editorially approved."
+                    )
+                note_rev = note_dict.get("asset_revision_id")
+                if note_rev and note_rev != asset_revision_id:
+                    raise ReleaseGateError(
+                        f"Context note revision mismatch: note bound to '{note_rev}', publishing '{asset_revision_id}'."
+                    )
+                notes_by_interval[inv_id] = {
+                    "note_id": note_dict.get("note_id", f"note-{inv_id}"),
+                    "text": note_dict.get("text", "").strip(),
+                    "source_cue_ids": list(note_dict.get("source_cue_ids", [])),
+                    "generation_method": note_dict.get("generation_method", "extractive_subtitles"),
+                    "editorial_approved": True,
+                }
+
+            for interval in mapped_intervals:
+                iid = interval["interval_id"]
+                if iid in notes_by_interval:
+                    interval["context_note"] = notes_by_interval[iid]
+
         playlist_sha256 = f"sha256:{hashlib.sha256(packaging_spec.playlist_manifest_bytes).hexdigest()}"
         zero_findings_attested = bool(
             report.editorial_decision_record

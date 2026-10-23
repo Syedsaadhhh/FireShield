@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- Fire TV / Leanback support (optional=false allows running on both Fire TV and standard Fire OS emulators) -->
     <uses-feature
         android:name="android.software.leanback"
@@ -13,6 +15,7 @@
         android:allowBackup="false"
         android:label="FireShield Fire OS Harness"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
         <activity

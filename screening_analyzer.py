@@ -25,6 +25,7 @@ import dataclasses
 import hashlib
 import json
 import math
+import os
 import pathlib
 import shutil
 import subprocess
@@ -118,6 +119,41 @@ class ScreeningAnalysisReport:
             "ea_iris_status": self.ea_iris_status,
             "editorial_decision_record": self.editorial_decision_record,
         }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> ScreeningAnalysisReport:
+        findings = [
+            CandidateHazardFinding(
+                interval_id=f["interval_id"],
+                start_frame=int(f["start_frame"]),
+                end_frame=int(f["end_frame"]),
+                start_ms=int(f["start_ms"]),
+                end_ms=int(f["end_ms"]),
+                proposed_safe_resume_ms=int(f.get("proposed_safe_resume_ms", f.get("safe_resume_ms", f["end_ms"] + 200))),
+                types=tuple(f["types"]),
+                policy=str(f["policy"]),
+                metrics=dict(f.get("metrics", {})),
+                context_cue_ids=tuple(f.get("context_cue_ids", ())),
+            )
+            for f in data.get("findings", [])
+        ]
+        res = data.get("resolution", {})
+        width = int(res.get("width", data.get("width", 320)))
+        height = int(res.get("height", data.get("height", 240)))
+        return cls(
+            asset_revision_id=str(data["asset_revision_id"]),
+            detector_version=str(data.get("detector_version", DETECTOR_VERSION)),
+            fps=float(data.get("fps", 30.0)),
+            total_frames=int(data.get("total_frames", 0)),
+            width=width,
+            height=height,
+            timebase=str(data.get("timebase", "presentation_ms")),
+            review_state=str(data.get("review_state", "pending_review")),
+            findings=findings,
+            unimplemented_capabilities=tuple(data.get("unimplemented_capabilities", UNIMPLEMENTED_DETECTOR_CAPABILITIES)),
+            ea_iris_status=dict(data.get("ea_iris_status", EA_IRIS_EVALUATION_STATUS)),
+            editorial_decision_record=data.get("editorial_decision_record"),
+        )
 
 
 def _srgb_uint8_to_linear(rgb_uint8: np.ndarray) -> np.ndarray:
@@ -243,6 +279,7 @@ def analyze_rgb_frame_sequence(
     fps: float,
     *,
     raw_source_bytes: Optional[bytes] = None,
+    exact_asset_revision_id: Optional[str] = None,
     safe_resume_margin_ms: int = DEFAULT_MIN_SAFE_RESUME_MARGIN_MS,
     min_area_fraction: float = 0.25,
     luminance_delta_threshold: float = 0.10,
@@ -261,8 +298,11 @@ def analyze_rgb_frame_sequence(
         raise ValueError("fps must be > 0.")
 
     n_frames, height, width, _ = frames_rgb.shape
-    source_bytes = raw_source_bytes if raw_source_bytes is not None else frames_rgb.tobytes()
-    asset_revision_id = f"sha256:{hashlib.sha256(source_bytes).hexdigest()}"
+    if exact_asset_revision_id:
+        asset_revision_id = exact_asset_revision_id
+    else:
+        source_bytes = raw_source_bytes if raw_source_bytes is not None else frames_rgb.tobytes()
+        asset_revision_id = f"sha256:{hashlib.sha256(source_bytes).hexdigest()}"
 
     if n_frames == 0:
         return ScreeningAnalysisReport(
@@ -480,10 +520,17 @@ def apply_human_editorial_decision(
 
 
 def find_ffmpeg_executable() -> Optional[str]:
+    env_path = os.environ.get("FIRESHIELD_FFMPEG_PATH")
+    if env_path and pathlib.Path(env_path).exists():
+        return str(pathlib.Path(env_path))
+
     found = shutil.which("ffmpeg")
     candidates = []
     if found:
         candidates.append(pathlib.Path(found))
+    candidates.append(
+        pathlib.Path(r"C:\Users\ATEC\.vscode\extensions\kilocode.kilo-code-7.5.0-win32-x64\bin\ffmpeg.exe")
+    )
     candidates.append(
         pathlib.Path(
             r"C:\Users\ATEC\AppData\Local\Microsoft\WinGet\Packages"

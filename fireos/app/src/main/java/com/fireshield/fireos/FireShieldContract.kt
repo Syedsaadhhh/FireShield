@@ -42,7 +42,8 @@ data class HazardInterval(
     val safeResumeMs: Long,
     val types: List<String>,
     val policy: String,
-    val contextCueIds: List<String> = emptyList()
+    val contextCueIds: List<String> = emptyList(),
+    val contextNote: String? = null
 )
 
 data class PlayerCommand(
@@ -54,7 +55,8 @@ data class PlayerCommand(
     val targetSeekMs: Long? = null,
     val intervalId: String? = null,
     val hazardTypes: List<String> = emptyList(),
-    val contextCueIds: List<String> = emptyList()
+    val contextCueIds: List<String> = emptyList(),
+    val contextNote: String? = null
 )
 
 data class ValidatedSidecarContract(
@@ -111,8 +113,39 @@ object FireShieldContractValidator {
     }
 
     /**
+     * Escapes a string strictly according to RFC 8259 without forward-slash escaping,
+     * emitting Unicode characters directly as UTF-8, exactly matching Python's
+     * json.dumps(..., separators=(',', ':'), ensure_ascii=False).
+     */
+    fun canonicalQuote(s: String): String {
+        val sb = StringBuilder(s.length + 8)
+        sb.append('"')
+        for (i in 0 until s.length) {
+            val c = s[i]
+            when (c) {
+                '"' -> sb.append("\\\"")
+                '\\' -> sb.append("\\\\")
+                '\b' -> sb.append("\\b")
+                '\u000C' -> sb.append("\\f")
+                '\n' -> sb.append("\\n")
+                '\r' -> sb.append("\\r")
+                '\t' -> sb.append("\\t")
+                else -> {
+                    if (c.code < 0x20) {
+                        sb.append(String.format(java.util.Locale.US, "\\u%04x", c.code))
+                    } else {
+                        sb.append(c)
+                    }
+                }
+            }
+        }
+        sb.append('"')
+        return sb.toString()
+    }
+
+    /**
      * Produces canonical compact JSON with lexicographically sorted object keys,
-     * matching Python's json.dumps(..., sort_keys=True, separators=(",", ":")).
+     * matching Python's json.dumps(..., sort_keys=True, separators=(",", ":"), ensure_ascii=False).
      */
     fun canonicalizeJsonValue(value: Any?): String {
         return when (value) {
@@ -121,13 +154,16 @@ object FireShieldContractValidator {
             is Int, is Long -> value.toString()
             is Number -> {
                 val d = value.toDouble()
+                if (d.isNaN() || d.isInfinite()) {
+                    throw FireShieldContractException("Non-finite numbers (NaN/Infinity) are not allowed in canonical JSON.")
+                }
                 if (d == d.toLong().toDouble()) d.toLong().toString() else value.toString()
             }
-            is String -> JSONObject.quote(value).replace("\\/", "/")
+            is String -> canonicalQuote(value)
             is JSONObject -> {
                 val keys = value.keys().asSequence().toList().sorted()
                 val members = keys.map { k ->
-                    "${JSONObject.quote(k).replace("\\/", "/")}:${canonicalizeJsonValue(value.opt(k))}"
+                    "${canonicalQuote(k)}:${canonicalizeJsonValue(value.opt(k))}"
                 }
                 "{${members.joinToString(",")}}"
             }
@@ -424,6 +460,13 @@ object FireShieldContractValidator {
                 throw FireShieldContractException("Interval $i has blank interval_id.")
             }
 
+            val noteObj = item.optJSONObject("context_note")
+            val noteText = when {
+                noteObj != null -> if (noteObj.has("text")) noteObj.optString("text") else null
+                item.has("context_note") && !item.isNull("context_note") -> item.optString("context_note")
+                else -> null
+            }
+
             validatedIntervals.add(
                 HazardInterval(
                     intervalId = intervalId,
@@ -432,7 +475,8 @@ object FireShieldContractValidator {
                     safeResumeMs = safeResumeMs,
                     types = typesList,
                     policy = policy,
-                    contextCueIds = cuesList
+                    contextCueIds = cuesList,
+                    contextNote = noteText
                 )
             )
             prevEndMs = endMs

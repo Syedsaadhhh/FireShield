@@ -116,6 +116,7 @@ class HazardInterval:
     types: Tuple[str, ...]
     policy: str
     context_cue_ids: Tuple[str, ...] = ()
+    context_note: Optional[Dict[str, Any]] = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -133,6 +134,7 @@ class PlayerCommand:
     interval_id: Optional[str] = None
     hazard_types: Tuple[str, ...] = ()
     context_cue_ids: Tuple[str, ...] = ()
+    context_note: Optional[Dict[str, Any]] = None
     audit_evidence: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
 
@@ -521,6 +523,13 @@ class SidecarContractValidator:
                     f"Interval at index {idx} has invalid context_cue_ids (must be list of non-empty strings)."
                 )
 
+            raw_note = item.get("context_note")
+            if raw_note is not None:
+                if not isinstance(raw_note, dict):
+                    raise FireShieldRuntimeError(f"Interval at index {idx} has invalid context_note (must be a JSON object).")
+                if "text" not in raw_note or not isinstance(raw_note["text"], str) or not raw_note["text"].strip():
+                    raise FireShieldRuntimeError(f"Interval at index {idx} context_note missing valid non-empty 'text' field.")
+
             interval_id = item.get("interval_id", f"interval-{idx:03d}")
             if not isinstance(interval_id, str) or not interval_id.strip():
                 raise FireShieldRuntimeError(f"Interval at index {idx} has invalid interval_id.")
@@ -534,6 +543,7 @@ class SidecarContractValidator:
                     types=tuple(raw_types),
                     policy=policy,
                     context_cue_ids=tuple(raw_cues),
+                    context_note=raw_note,
                 )
             )
             prev_end_ms = end_ms
@@ -971,6 +981,7 @@ class FireShieldRuntime:
                     interval_id=matched_interval.interval_id,
                     hazard_types=matched_interval.types,
                     context_cue_ids=matched_interval.context_cue_ids,
+                    context_note=matched_interval.context_note,
                     audit_evidence={
                         "trigger_kind": trigger_kind,
                         "guard_start_ms": self._guard_start_ms(matched_interval),

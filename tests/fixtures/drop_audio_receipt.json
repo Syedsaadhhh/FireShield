@@ -1,0 +1,39 @@
+{
+  "receipt_schema_version": 1,
+  "incident_id": "d809f43c-cb79-4067-b8dd-adefdbf7fbec",
+  "fixture_id": "benign_calm_presentation_with_subtitles",
+  "timestamp_iso": "2026-10-15T15:46:54Z",
+  "environment": {
+    "app_version": "0.2.0",
+    "platform": "FireOS-Android-Leanback"
+  },
+  "recovery_status": "DIVERGENCE_DETECTED",
+  "diagnostic_code": "ERR_MISMATCH_SELECTED_AUDIO_TRACK_ID",
+  "mismatch_fields": [
+    "selected_audio_track_id"
+  ],
+  "position_delta_ms": 250,
+  "expected_state": {
+    "position_ms": 1728,
+    "captions_enabled": true,
+    "selected_subtitle_track_id": "1:sub-en",
+    "selected_audio_track_id": "0:1/15",
+    "presentation_mode": "standard",
+    "rendition_playlist_sha256": "sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230"
+  },
+  "observed_state": {
+    "position_ms": 1978,
+    "captions_enabled": true,
+    "selected_subtitle_track_id": "1:sub-en",
+    "selected_audio_track_id": null,
+    "presentation_mode": "standard",
+    "rendition_playlist_sha256": "sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230"
+  },
+  "privacy_attestation": {
+    "contains_pii": false,
+    "contains_video_buffers": false,
+    "contains_auth_tokens": false
+  },
+  "retest_fixture_id": "DROPPED_AUDIO_FAULT_V1",
+  "receipt_digest": "sha256:3e3cb40f40b7e5bae73f50b0f9d2fc1d5a08cf8f281008c444cc052aeb32cd6c"
+}

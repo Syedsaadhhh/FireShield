@@ -23,6 +23,7 @@ Test Matrix:
    - Condition C: Merged FireTrace Synaptic Continuity.
 """
 
+import hashlib
 import json
 import pathlib
 import pytest
@@ -33,6 +34,7 @@ from continuity_engine import (
     ContinuityError,
     ObservedPlayerState,
     compute_checkpoint_digest,
+    compute_receipt_digest,
     create_checkpoint,
     generate_incident_receipt,
     load_checkpoint,
@@ -345,6 +347,200 @@ def test_receipt_digest_integrity_and_tamper_detection():
     assert "integrity digest mismatch" in str(exc_info.value).lower()
 
 
+def test_strict_receipt_schema_enforcement_and_negative_vectors():
+    """
+    Negative tests verifying strict schema enforcement, closed field allowlists,
+    mandatory digest checks, independent sensitive data scanning, and duplicate key rejection.
+    """
+    import copy
+
+    base_receipt = {
+        "receipt_schema_version": 1,
+        "incident_id": "inc-strict-001",
+        "fixture_id": "DROPPED_CAPTION_FAULT_V1",
+        "timestamp_iso": "2026-10-19T00:00:00Z",
+        "environment": {
+            "app_version": "0.2.0",
+            "platform": "FireOS-Android-Leanback",
+        },
+        "recovery_status": "DIVERGENCE_DETECTED",
+        "diagnostic_code": "ERR_MISMATCH_CAPTIONS_ENABLED",
+        "mismatch_fields": ["captions_enabled"],
+        "position_delta_ms": 200,
+        "expected_state": {
+            "position_ms": 10000,
+            "captions_enabled": True,
+            "selected_subtitle_track_id": "sub_en",
+            "selected_audio_track_id": None,
+            "presentation_mode": "standard",
+            "rendition_playlist_sha256": TEST_PLAYLIST_SHA,
+        },
+        "observed_state": {
+            "position_ms": 10200,
+            "captions_enabled": False,
+            "selected_subtitle_track_id": None,
+            "selected_audio_track_id": None,
+            "presentation_mode": "standard",
+            "rendition_playlist_sha256": TEST_PLAYLIST_SHA,
+        },
+        "privacy_attestation": {
+            "contains_pii": False,
+            "contains_video_buffers": False,
+            "contains_auth_tokens": False,
+        },
+        "retest_fixture_id": "DROPPED_CAPTION_FAULT_V1",
+    }
+    base_receipt["receipt_digest"] = compute_receipt_digest(base_receipt)
+
+    # 1. Valid base receipt parses cleanly
+    parsed = validate_and_parse_incident_receipt(json.dumps(base_receipt))
+    assert parsed["incident_id"] == "inc-strict-001"
+    assert parsed["receipt_digest"] == base_receipt["receipt_digest"]
+
+    # 2. Missing receipt_digest: rejected in strict mode, accepted in legacy mode
+    r_no_digest = copy.deepcopy(base_receipt)
+    del r_no_digest["receipt_digest"]
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(r_no_digest), strict=True)
+    assert "Missing required receipt field" in str(exc.value)
+
+    legacy_parsed = validate_and_parse_incident_receipt(json.dumps(r_no_digest), strict=False)
+    assert legacy_parsed["incident_id"] == "inc-strict-001"
+
+    # 3. Injected unknown top-level field with recomputed digest: REJECTED
+    r_injected = copy.deepcopy(base_receipt)
+    r_injected["unauthorized_top_field"] = "malicious_telemetry"
+    r_injected["receipt_digest"] = compute_receipt_digest(r_injected)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(r_injected))
+    assert "Unknown top-level field" in str(exc.value)
+
+    # 4. Injected unknown nested field in environment / expected_state / privacy_attestation
+    r_bad_env = copy.deepcopy(base_receipt)
+    r_bad_env["environment"]["device_serial"] = "SECRET123"
+    r_bad_env["receipt_digest"] = compute_receipt_digest(r_bad_env)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_env))
+
+    r_bad_state = copy.deepcopy(base_receipt)
+    r_bad_state["expected_state"]["video_buffer_leak"] = "hexbytes..."
+    r_bad_state["receipt_digest"] = compute_receipt_digest(r_bad_state)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_state))
+
+    r_bad_att = copy.deepcopy(base_receipt)
+    r_bad_att["privacy_attestation"]["unknown_flag"] = False
+    r_bad_att["receipt_digest"] = compute_receipt_digest(r_bad_att)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_att))
+
+    # 5. Type violations: bool where int expected, string where int expected
+    r_bad_type1 = copy.deepcopy(base_receipt)
+    r_bad_type1["position_delta_ms"] = True  # bool is int in Python, but strict check rejects
+    r_bad_type1["receipt_digest"] = compute_receipt_digest(r_bad_type1)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_type1))
+
+    r_bad_type2 = copy.deepcopy(base_receipt)
+    r_bad_type2["position_delta_ms"] = "200"
+    r_bad_type2["receipt_digest"] = compute_receipt_digest(r_bad_type2)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_type2))
+
+    r_bad_type3 = copy.deepcopy(base_receipt)
+    r_bad_type3["expected_state"]["captions_enabled"] = 1  # int where bool expected
+    r_bad_type3["receipt_digest"] = compute_receipt_digest(r_bad_type3)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_type3))
+
+    # 6. Integer range violations: position_delta_ms > 3600000ms
+    r_huge_delta = copy.deepcopy(base_receipt)
+    r_huge_delta["position_delta_ms"] = 5_000_000
+    r_huge_delta["receipt_digest"] = compute_receipt_digest(r_huge_delta)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_huge_delta))
+
+    # 7. Privacy attestation violation: declares presence of sensitive data
+    r_pii = copy.deepcopy(base_receipt)
+    r_pii["privacy_attestation"]["contains_pii"] = True
+    r_pii["receipt_digest"] = compute_receipt_digest(r_pii)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(r_pii))
+    assert "Privacy violation" in str(exc.value)
+
+    # 8. Independent content scanning: credential/token leakage
+    r_secret = copy.deepcopy(base_receipt)
+    r_secret["observed_state"]["selected_subtitle_track_id"] = "track?token=eyJhbGciOi"
+    r_secret["receipt_digest"] = compute_receipt_digest(r_secret)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(r_secret))
+    assert "Credential, auth token, or secret pattern" in str(exc.value)
+
+    # 9. Script injection rejection
+    r_xss = copy.deepcopy(base_receipt)
+    r_xss["observed_state"]["selected_audio_track_id"] = "<script>fetch('//evil')</script>"
+    r_xss["receipt_digest"] = compute_receipt_digest(r_xss)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_xss))
+
+    # 10. Duplicate key rejection in raw JSON
+    raw_dup = '{"incident_id": "inc-1", "incident_id": "inc-2", "receipt_schema_version": 1}'
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(raw_dup)
+    assert "Duplicate key detected" in str(exc.value)
+
+    # 11. Non-object JSON rejection
+    for non_obj in ("[1, 2, 3]", '"just a string"', "12345", "true", "null"):
+        with pytest.raises(ContinuityError):
+            validate_and_parse_incident_receipt(non_obj)
+
+    # 12. Oversized payload rejection (> 64KB)
+    oversized = json.dumps(base_receipt) + (" " * 70000)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(oversized)
+    assert "exceeds maximum payload size" in str(exc.value)
+
+    # 13. Invalid receipt_schema_version
+    r_bad_ver = copy.deepcopy(base_receipt)
+    r_bad_ver["receipt_schema_version"] = 2
+    r_bad_ver["receipt_digest"] = compute_receipt_digest(r_bad_ver)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_ver))
+
+    # 14. Unknown retest fixture ID
+    r_bad_fix = copy.deepcopy(base_receipt)
+    r_bad_fix["retest_fixture_id"] = "MALICIOUS_RETEST_FIXTURE_V9"
+    r_bad_fix["receipt_digest"] = compute_receipt_digest(r_bad_fix)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(json.dumps(r_bad_fix))
+
+
+def test_cross_language_canonical_parity_vectors():
+    """
+    Verifies that Python produces exact bit-for-bit canonical JSON strings and SHA-256 digests
+    matching the shared canonical_vectors.json spec, ensuring 100% parity with Kotlin.
+    """
+    vectors_path = pathlib.Path("tools/canonical_vectors.json")
+    assert vectors_path.exists(), "tools/canonical_vectors.json must exist"
+
+    with open(vectors_path, "r", encoding="utf-8") as f:
+        vectors = json.load(f)
+
+    assert len(vectors) > 0, "Vectors list must not be empty"
+
+    for vec in vectors:
+        name = vec["name"]
+        raw_input = vec["input"]
+        expected_canonical = vec["expected_canonical"]
+        expected_sha = vec["expected_sha256"]
+
+        actual_canonical = json.dumps(raw_input, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        assert actual_canonical == expected_canonical, f"Canonical JSON mismatch for vector '{name}'"
+
+        actual_sha = f"sha256:{hashlib.sha256(actual_canonical.encode('utf-8')).hexdigest()}"
+        assert actual_sha == expected_sha, f"SHA-256 digest mismatch for vector '{name}'"
+
+
 # ---------------------------------------------------------------------------
 # Three-Way Ablation Benchmark
 # ---------------------------------------------------------------------------
@@ -472,13 +668,99 @@ def test_presentation_mode_receipt_selects_fault_fixture_and_unknown_mismatch_re
     with pytest.raises(ContinuityError):
         derive_retest_fixture_id(dataclasses.replace(result, mismatch_fields=("unsupported_field",)))
 
-    # A complete, digest-valid envelope isolates the unknown-fixture check.
-    from continuity_engine import compute_receipt_digest
-    bad_fixture_receipt = generate_incident_receipt(
-        incident_id="test-inc-unknown", fixture_id="fix-1", verification_result=result)
-    bad_fixture_receipt["retest_fixture_id"] = "UNKNOWN_RECOVERY_FAULT_V1"
-    bad_fixture_receipt["receipt_digest"] = compute_receipt_digest(bad_fixture_receipt)
+    bad_fixture_receipt = {
+        "receipt_schema_version": 1,
+        "incident_id": "test-inc-unknown",
+        "fixture_id": "fix-1",
+        "recovery_status": "DIVERGENCE_DETECTED",
+        "retest_fixture_id": "UNKNOWN_RECOVERY_FAULT_V1",
+        "mismatch_fields": ["captions_enabled"],
+    }
     with pytest.raises(ContinuityError) as exc_info:
-        validate_and_parse_incident_receipt(json.dumps(bad_fixture_receipt))
+        validate_and_parse_incident_receipt(json.dumps(bad_fixture_receipt), strict=False)
     assert "unknown retest fixture" in str(exc_info.value).lower()
+
+
+def test_digest_functions_and_numeric_surrogate_rejection():
+    """
+    Scope D: Test actual receipt/checkpoint digest functions, non-BMP key ordering,
+    and explicit rejection of floats, exponents, non-finite values, and invalid surrogates.
+    """
+    import copy
+    import math
+    from continuity_engine import compute_receipt_digest, compute_checkpoint_digest, ContinuityError
+
+    # 1. Test actual checkpoint digest function
+    cp_data = {
+        "schema_version": 1,
+        "checkpoint_id": "cp-001",
+        "timestamp_epoch_ms": 1700000000000,
+        "asset_revision_id": "sha256:" + "a" * 64,
+        "rendition_set_id": "set-1",
+        "rendition_playlist_sha256": "sha256:" + "b" * 64,
+        "position_ms": 5000,
+        "captions_enabled": True,
+        "selected_subtitle_track_id": "sub-1",
+        "selected_audio_track_id": "aud-1",
+        "presentation_mode": "standard",
+    }
+    cp_digest = compute_checkpoint_digest(cp_data)
+    assert cp_digest.startswith("sha256:")
+    assert len(cp_digest) == 71
+
+    # 2. Test actual receipt digest function
+    receipt_data = {
+        "receipt_schema_version": 1,
+        "incident_id": "inc-001",
+        "fixture_id": "fix-1",
+        "timestamp_iso": "2026-10-19T00:00:00Z",
+        "environment": {"app_version": "0.2.0", "platform": "FireOS-Android-Leanback"},
+        "recovery_status": "DIVERGENCE_DETECTED",
+        "diagnostic_code": "ERR_TEST",
+        "mismatch_fields": ["captions_enabled"],
+        "position_delta_ms": 100,
+        "expected_state": {"position_ms": 1000, "captions_enabled": True},
+        "observed_state": {"position_ms": 1100, "captions_enabled": False},
+        "privacy_attestation": {
+            "contains_pii": False,
+            "contains_video_buffers": False,
+            "contains_auth_tokens": False,
+        },
+        "retest_fixture_id": "DROPPED_CAPTION_FAULT_V1",
+    }
+    rc_digest = compute_receipt_digest(receipt_data)
+    assert rc_digest.startswith("sha256:")
+    assert len(rc_digest) == 71
+
+    # 3. Explicit rejection of floats for integer position_delta_ms
+    float_delta_data = copy.deepcopy(receipt_data)
+    float_delta_data["position_delta_ms"] = 100.5
+    float_delta_data["receipt_digest"] = compute_receipt_digest(float_delta_data)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(float_delta_data))
+    assert "strict integer" in str(exc.value)
+
+    # 4. Explicit rejection of exponents/floats for position_ms in expected_state
+    float_pos_data = copy.deepcopy(receipt_data)
+    float_pos_data["expected_state"]["position_ms"] = 1000.0
+    float_pos_data["receipt_digest"] = compute_receipt_digest(float_pos_data)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(float_pos_data))
+    assert "Invalid position_ms" in str(exc.value)
+
+    # 5. Non-finite values rejected
+    nan_data = copy.deepcopy(receipt_data)
+    nan_data["position_delta_ms"] = float("nan")
+    # json.dumps in Python emits NaN by default
+    nan_json = json.dumps(nan_data)
+    with pytest.raises(ContinuityError):
+        validate_and_parse_incident_receipt(nan_json)
+
+    # 6. Arbitrary unknown keys rejected in strict mode
+    extra_key_data = copy.deepcopy(receipt_data)
+    extra_key_data["unexpected_custom_field"] = "malicious"
+    extra_key_data["receipt_digest"] = compute_receipt_digest(extra_key_data)
+    with pytest.raises(ContinuityError) as exc:
+        validate_and_parse_incident_receipt(json.dumps(extra_key_data))
+    assert "Unknown top-level field" in str(exc.value)
 

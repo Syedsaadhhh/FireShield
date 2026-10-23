@@ -644,7 +644,34 @@ class FireShieldNativeGateTest {
         for (i in 0 until 31) invalidPointPub[i] = 0xFF.toByte()
         assertFalse("Ed25519CompatVerifier must reject point with y >= 2^255-19", Ed25519CompatVerifier.verify(invalidPointPub, message, sigBytes))
     }
+
+    @Test
+    fun testCanonicalJsonCrossLanguageParityVectors() {
+        val vectorsFile = File("../../tools/canonical_vectors.json").let {
+            if (it.exists()) it else File("../tools/canonical_vectors.json").let { f2 ->
+                if (f2.exists()) f2 else File("src/test/resources/canonical_vectors.json")
+            }
+        }
+        assertTrue("canonical_vectors.json must exist", vectorsFile.exists())
+        val jsonArray = org.json.JSONArray(vectorsFile.readText(Charsets.UTF_8))
+        assertTrue("Vectors array must not be empty", jsonArray.length() > 0)
+
+        for (i in 0 until jsonArray.length()) {
+            val vector = jsonArray.getJSONObject(i)
+            val name = vector.getString("name")
+            val rawInput = vector.get("input")
+            val expectedCanonical = vector.getString("expected_canonical")
+            val expectedSha = vector.getString("expected_sha256")
+
+            val actualCanonical = FireShieldContractValidator.canonicalizeJsonValue(rawInput)
+            assertEquals("Canonical JSON mismatch for vector '$name'", expectedCanonical, actualCanonical)
+
+            val actualSha = FireShieldContractValidator.sha256Prefixed(actualCanonical.toByteArray(Charsets.UTF_8))
+            assertEquals("Canonical SHA-256 mismatch for vector '$name'", expectedSha, actualSha)
+        }
+    }
 }
+
 
 
 

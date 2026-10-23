@@ -1,0 +1,163 @@
+[
+  {
+    "name": "slash_and_colon",
+    "description": "Forward slash preservation (no \\/ escaping) and colon delimiters",
+    "input": {
+      "audio_track": "0:1/15",
+      "path": "hls/variants/720p/stream.m3u8"
+    },
+    "expected_canonical": "{\"audio_track\":\"0:1/15\",\"path\":\"hls/variants/720p/stream.m3u8\"}",
+    "expected_sha256": "sha256:e5ca4e0deb97f1ebd12a2e3ae1918aeca7988bbe9d0239b529861476a3fd6021"
+  },
+  {
+    "name": "backslash_and_quote",
+    "description": "Proper escaping of quotes and backslashes per RFC 8259",
+    "input": {
+      "greeting": "hello \"world\"",
+      "windows_path": "C:\\Program Files\\FireShield"
+    },
+    "expected_canonical": "{\"greeting\":\"hello \\\"world\\\"\",\"windows_path\":\"C:\\\\Program Files\\\\FireShield\"}",
+    "expected_sha256": "sha256:85e7803fb14ad68e3ce361cdcdc2129b0b0effc65ec2ca401d9937941065e56a"
+  },
+  {
+    "name": "whitespace_control_escapes",
+    "description": "Standard JSON whitespace control character escapes (\\n, \\t, \\r)",
+    "input": {
+      "escapes": "line1\nline2\ttabbed\r\nreturn"
+    },
+    "expected_canonical": "{\"escapes\":\"line1\\nline2\\ttabbed\\r\\nreturn\"}",
+    "expected_sha256": "sha256:58d8af1fb415620db5396333ffb351cea1a1fc50d6abb4d9605e8c87bc615c26"
+  },
+  {
+    "name": "unicode_latin_supplement",
+    "description": "Direct UTF-8 emission of Latin-1 supplement accented characters",
+    "input": {
+      "title": "café",
+      "role": "naïve",
+      "city": "münchen",
+      "resume": "résumé"
+    },
+    "expected_canonical": "{\"city\":\"münchen\",\"resume\":\"résumé\",\"role\":\"naïve\",\"title\":\"café\"}",
+    "expected_sha256": "sha256:9f69b5c4fcd1ae7095049a1e7aecefd2880218decb498995de8b95c7e1b30653"
+  },
+  {
+    "name": "unicode_cjk",
+    "description": "Direct UTF-8 emission of multi-byte CJK ideographs",
+    "input": {
+      "japanese": "東京都",
+      "chinese": "你好世界",
+      "korean": "안녕하세요"
+    },
+    "expected_canonical": "{\"chinese\":\"你好世界\",\"japanese\":\"東京都\",\"korean\":\"안녕하세요\"}",
+    "expected_sha256": "sha256:a68db2cd941840807da8878ae3a13e9d2581dcee79a9a2659a1960141eaeb7da"
+  },
+  {
+    "name": "unicode_rtl",
+    "description": "Direct UTF-8 emission of right-to-left Arabic and Hebrew scripts",
+    "input": {
+      "arabic": "مرحبا بالعالم",
+      "hebrew": "שלום עולם"
+    },
+    "expected_canonical": "{\"arabic\":\"مرحبا بالعالم\",\"hebrew\":\"שלום עולם\"}",
+    "expected_sha256": "sha256:223290a62d68196841f0c04c9d6a15f8191936fd00ccbc34daafed0c6fa25f17"
+  },
+  {
+    "name": "non_bmp_emoji",
+    "description": "Direct UTF-8 emission of 4-byte SMP characters (emojis and Gothic letters)",
+    "input": {
+      "badge": "FireShield 🛡️",
+      "tv": "4K TV 📺",
+      "ancient_gothic": "𐍈"
+    },
+    "expected_canonical": "{\"ancient_gothic\":\"𐍈\",\"badge\":\"FireShield 🛡️\",\"tv\":\"4K TV 📺\"}",
+    "expected_sha256": "sha256:f983be521f30613a3ac56262ec93cde0a5f203e25077756b8cc1aec5c510c943"
+  },
+  {
+    "name": "nested_key_ordering",
+    "description": "Lexicographic sorting of keys at all nesting levels without whitespace",
+    "input": {
+      "z": 100,
+      "m": {
+        "c": 3,
+        "b": 2,
+        "a": 1
+      },
+      "a": [
+        3,
+        2,
+        1
+      ]
+    },
+    "expected_canonical": "{\"a\":[3,2,1],\"m\":{\"a\":1,\"b\":2,\"c\":3},\"z\":100}",
+    "expected_sha256": "sha256:2231fb2c69519a7f53219e3410bcbe1b98f34f8d1b1a37157f3536bc0fcbdcff"
+  },
+  {
+    "name": "primitives_and_null",
+    "description": "Exact JSON serialization for booleans, null, zero, negative int, and floats",
+    "input": {
+      "bool_true": true,
+      "bool_false": false,
+      "null_val": null,
+      "zero": 0,
+      "negative_int": -42,
+      "float_val": 3.14159
+    },
+    "expected_canonical": "{\"bool_false\":false,\"bool_true\":true,\"float_val\":3.14159,\"negative_int\":-42,\"null_val\":null,\"zero\":0}",
+    "expected_sha256": "sha256:440aff702dd6b1e1faa1eddd3dd70d1f547b5a0bba1d04448ac9e3625e30bbf1"
+  },
+  {
+    "name": "empty_structures",
+    "description": "Empty objects, arrays, and strings with compact delimiters",
+    "input": {
+      "empty_array": [],
+      "empty_object": {},
+      "empty_string": ""
+    },
+    "expected_canonical": "{\"empty_array\":[],\"empty_object\":{},\"empty_string\":\"\"}",
+    "expected_sha256": "sha256:41169e1a57b11911770dafd03806905a535188fdc6074074681384ec0c73bb94"
+  },
+  {
+    "name": "actual_receipt_structure",
+    "description": "Full schema-compliant incident receipt dictionary",
+    "input": {
+      "receipt_schema_version": 1,
+      "incident_id": "inc-vector-001",
+      "fixture_id": "DROPPED_CAPTION_FAULT_V1",
+      "timestamp_iso": "2026-10-19T00:00:00Z",
+      "environment": {
+        "app_version": "0.2.0",
+        "platform": "FireOS-Android-Leanback"
+      },
+      "recovery_status": "DIVERGENCE_DETECTED",
+      "diagnostic_code": "ERR_MISMATCH_CAPTIONS_ENABLED",
+      "mismatch_fields": [
+        "captions_enabled"
+      ],
+      "position_delta_ms": 342,
+      "expected_state": {
+        "position_ms": 2090,
+        "captions_enabled": true,
+        "selected_subtitle_track_id": "1:sub-en",
+        "selected_audio_track_id": "0:1/15",
+        "presentation_mode": "standard",
+        "rendition_playlist_sha256": "sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230"
+      },
+      "observed_state": {
+        "position_ms": 2432,
+        "captions_enabled": false,
+        "selected_subtitle_track_id": null,
+        "selected_audio_track_id": "0:1/15",
+        "presentation_mode": "standard",
+        "rendition_playlist_sha256": "sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230"
+      },
+      "privacy_attestation": {
+        "contains_pii": false,
+        "contains_video_buffers": false,
+        "contains_auth_tokens": false
+      },
+      "retest_fixture_id": "DROPPED_CAPTION_FAULT_V1"
+    },
+    "expected_canonical": "{\"diagnostic_code\":\"ERR_MISMATCH_CAPTIONS_ENABLED\",\"environment\":{\"app_version\":\"0.2.0\",\"platform\":\"FireOS-Android-Leanback\"},\"expected_state\":{\"captions_enabled\":true,\"position_ms\":2090,\"presentation_mode\":\"standard\",\"rendition_playlist_sha256\":\"sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230\",\"selected_audio_track_id\":\"0:1/15\",\"selected_subtitle_track_id\":\"1:sub-en\"},\"fixture_id\":\"DROPPED_CAPTION_FAULT_V1\",\"incident_id\":\"inc-vector-001\",\"mismatch_fields\":[\"captions_enabled\"],\"observed_state\":{\"captions_enabled\":false,\"position_ms\":2432,\"presentation_mode\":\"standard\",\"rendition_playlist_sha256\":\"sha256:bc13af2d7d20d72951c17c8a5e69e0e6cd660ed0771cd4849a3323603f484230\",\"selected_audio_track_id\":\"0:1/15\",\"selected_subtitle_track_id\":null},\"position_delta_ms\":342,\"privacy_attestation\":{\"contains_auth_tokens\":false,\"contains_pii\":false,\"contains_video_buffers\":false},\"receipt_schema_version\":1,\"recovery_status\":\"DIVERGENCE_DETECTED\",\"retest_fixture_id\":\"DROPPED_CAPTION_FAULT_V1\",\"timestamp_iso\":\"2026-10-19T00:00:00Z\"}",
+    "expected_sha256": "sha256:7d7d2043eadf28ee434198995ae878c1b725cee930bf33b6bd34f02b1fde8664"
+  }
+]

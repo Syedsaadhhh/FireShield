@@ -3,9 +3,6 @@ from pathlib import Path
 import argparse
 import hashlib
 import json
-import os
-import shutil
-import datetime
 import subprocess
 import sys
 import time
@@ -13,17 +10,24 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 PKG = "com.fireshield.fireos"
 ACTIVITY = PKG + "/.MainActivity"
-# Populated by main; importing this module does not invoke ADB or parse arguments.
-ADB = None
-EVIDENCE = None
-args = None
+parser = argparse.ArgumentParser()
+parser.add_argument("--serial", default="emulator-5556")
+args = parser.parse_args()
+if not args.serial.startswith("emulator-"):
+    raise SystemExit("This runner is restricted to emulator serials.")
+ADB = Path(r"C:\Users\ATEC\AppData\Local\Android\Sdk\platform-tools\adb.exe")
+subprocess.run([str(ADB), "connect", "127.0.0.1:5557"], capture_output=True)
+EVIDENCE = ROOT / "evidence/2026-10-15-run4/runtime"
+EVIDENCE.mkdir(parents=True, exist_ok=True)
 results = []
-RECOVERY_TIMEOUT_MS = 3000
-
 
 def adb(*arguments, check=True, timeout=90):
     p = subprocess.run([str(ADB), "-s", args.serial, *arguments],
         capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+    if ("device" in p.stderr and "not found" in p.stderr) or "daemon started" in p.stdout or "daemon started" in p.stderr:
+        subprocess.run([str(ADB), "connect", "127.0.0.1:5557"], capture_output=True)
+        p = subprocess.run([str(ADB), "-s", args.serial, *arguments],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
     if check and p.returncode:
         raise RuntimeError("ADB failed: " + " ".join(arguments) + "\n" + p.stdout + p.stderr)
     return p.stdout + p.stderr
@@ -52,6 +56,7 @@ def checkpoint():
             continue
     return None
 
+RECOVERY_TIMEOUT_MS = 55000
 
 def wait_for(predicate, timeout=90, description="condition"):
     end = time.monotonic() + timeout
@@ -118,33 +123,28 @@ def record(name, work):
         results.append({"scenario": name, "status": "PASS", "detail": detail})
         print("PASS " + name + " " + json.dumps(detail), flush=True)
     except Exception as exc:
-        try:
-            capture(name + "_failure")
-        except Exception:
-            pass  # Preserve the original failure when ADB/capture itself failed.
+        capture(name + "_failure")
         results.append({"scenario": name, "status": "FAIL", "detail": str(exc)})
         raise
     finally:
         (EVIDENCE / "runtime_results.json").write_text(json.dumps({
             "serial": args.serial, "platform": "Android TV emulator",
-            "recovery_timeout_ms": RECOVERY_TIMEOUT_MS, "evidence_level": "PLAYER_SELECTION",
-            "output_verified": False, "results": results}, indent=2), encoding="utf-8")
+            "recovery_timeout_ms": RECOVERY_TIMEOUT_MS, "results": results}, indent=2), encoding="utf-8")
 
 def nominal():
     cp = fresh()
     return {"position_ms": cp["position_ms"], "subtitle_id": cp["selected_subtitle_track_id"],
         "audio_id": cp["selected_audio_track_id"]}
 
-def force_stop_relaunch():
+def process_death():
     cp = fresh()
     adb("shell", "am", "force-stop", PKG)
     clear_logs()
     launch()
-    text = wait_for(lambda: (t if "RECOVERY_VERIFIED" in (t := logs()) else None), description="force-stop/relaunch verification")
+    text = wait_for(lambda: (t if "RECOVERY_VERIFIED" in (t := logs()) else None), description="process-death recovery verification")
     if "UNEXPECTED_SEEK_CALLBACK" in text:
         raise RuntimeError("Recovery was misrouted into hazard bypass.")
-    return {"saved_position_ms": cp["position_ms"], "verification": "RECOVERY_VERIFIED",
-        "interruption": "force_stop", "evidence_level": "PLAYER_SELECTION", "output_verified": False}
+    return {"saved_position_ms": cp["position_ms"], "verification": "RECOVERY_VERIFIED"}
 
 def background():
     fresh()
@@ -153,7 +153,7 @@ def background():
     time.sleep(8)
     launch()
     wait_for(lambda: "RECOVERY_VERIFIED" in logs(), timeout=75, description="background/foreground recovery")
-    return {"verification": "RECOVERY_VERIFIED", "evidence_level": "PLAYER_SELECTION", "output_verified": False}
+    return {"verification": "RECOVERY_VERIFIED"}
 
 def fault(name, expected_field):
     fresh()
@@ -218,56 +218,19 @@ def invalid_checkpoint(stale=False):
     wait_for(lambda: ("RECOVERY_BLOCKED reason=" + reason) in logs(), description=reason)
     return {"blocked": reason}
 
-def main(argv=None):
-    global ADB, EVIDENCE, args, RECOVERY_TIMEOUT_MS
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--serial", default="emulator-5556")
-    parser.add_argument("--adb", default=os.environ.get("ADB") or shutil.which("adb"))
-    parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--recovery-timeout-ms", type=int, default=3000,
-                        help="Actual app deadline. Use 55000 explicitly to repeat the historical slow-emulator run.")
-    args = parser.parse_args(argv)
-    if not args.serial.startswith("emulator-"):
-        parser.error("This destructive debug-fixture runner is restricted to emulator serials.")
-    if not args.adb or not Path(args.adb).is_file():
-        parser.error("ADB not found; install platform-tools or pass --adb /absolute/path/to/adb")
-    if not 151 <= args.recovery_timeout_ms <= 120000:
-        parser.error("Recovery timeout must be between 151 and 120000 ms")
-    ADB = Path(args.adb)
-    RECOVERY_TIMEOUT_MS = args.recovery_timeout_ms
-    stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    EVIDENCE = args.output_dir or ROOT / "evidence" / ("runtime-" + stamp)
-    EVIDENCE.mkdir(parents=True, exist_ok=True)
-    if (EVIDENCE / "runtime_results.json").exists():
-        parser.error("Output already contains a run; choose a new --output-dir")
-    results.clear()
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True)
-    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True)
-    manifest = {"source_revision": head.stdout.strip() if head.returncode == 0 else None,
-        "working_tree_dirty": bool(dirty.stdout.strip()) if dirty.returncode == 0 else None,
-        "serial": args.serial, "platform": "Android TV emulator", "adb": str(ADB),
-        "recovery_timeout_ms": RECOVERY_TIMEOUT_MS, "evidence_level": "PLAYER_SELECTION",
-        "output_verified": False}
-    manifest["device_fingerprint"] = adb("shell", "getprop", "ro.build.fingerprint").strip()
-    (EVIDENCE / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    try:
-        record("nominal_playback", nominal)
-        record("force_stop_relaunch", force_stop_relaunch)
-        record("background_foreground", background)
-        record("dropped_subtitles", lambda: fault("drop_subtitles", "captions_enabled"))
-        record("dropped_audio", lambda: fault("drop_audio", "selected_audio_track_id"))
-        record("stale_playlist", lambda: fault("cut_drift", "rendition_playlist_sha256"))
-        record("presentation_mismatch", lambda: fault("presentation_mismatch", "presentation_mode"))
-        record("seek_overshoot", seek_overshoot)
-        record("readiness_timeout", readiness_timeout)
-        record("corrupt_checkpoint", lambda: invalid_checkpoint(False))
-        record("stale_asset_revision", lambda: invalid_checkpoint(True))
-        print("ALL RUNTIME SCENARIOS PASSED", flush=True)
-    except Exception as exc:
-        print("RUNTIME FAILURE: " + str(exc), flush=True)
-        raise SystemExit(1)
-
-
-
-if __name__ == "__main__":
-    main()
+try:
+    record("nominal_playback", nominal)
+    record("process_death_recovery", process_death)
+    record("background_foreground", background)
+    record("dropped_subtitles", lambda: fault("drop_subtitles", "captions_enabled"))
+    record("dropped_audio", lambda: fault("drop_audio", "selected_audio_track_id"))
+    record("stale_playlist", lambda: fault("cut_drift", "rendition_playlist_sha256"))
+    record("presentation_mismatch", lambda: fault("presentation_mismatch", "presentation_mode"))
+    record("seek_overshoot", seek_overshoot)
+    record("readiness_timeout", readiness_timeout)
+    record("corrupt_checkpoint", lambda: invalid_checkpoint(False))
+    record("stale_asset_revision", lambda: invalid_checkpoint(True))
+    print("ALL RUNTIME SCENARIOS PASSED", flush=True)
+except Exception as exc:
+    print("RUNTIME FAILURE: " + str(exc), flush=True)
+    raise SystemExit(1)

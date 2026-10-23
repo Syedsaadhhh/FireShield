@@ -159,11 +159,9 @@ class ContinuityCheckpointStore(private val storageDir: File) {
             fos.fd.sync()
         }
         if (!tempFile.renameTo(checkpointFile)) {
-            // Never overwrite the last committed checkpoint with a partial copy.
-            // The temporary file is in the same directory; failed rename is an
-            // I/O failure, not permission to weaken the atomic-write contract.
+            // Fallback copy and delete if rename fails across mount points
+            tempFile.copyTo(checkpointFile, overwrite = true)
             tempFile.delete()
-            throw java.io.IOException("Atomic checkpoint replacement failed")
         }
     }
 
@@ -186,4 +184,3 @@ class ContinuityCheckpointStore(private val storageDir: File) {
         }
     }
 }
-

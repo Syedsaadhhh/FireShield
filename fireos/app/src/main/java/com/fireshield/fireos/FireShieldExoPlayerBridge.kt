@@ -29,6 +29,15 @@ interface NativeExoPlayerPort {
         contextCueIds: List<String>,
         targetSeekMs: Long?
     )
+    fun showInterventionBanner(
+        reasonCode: String,
+        intervalId: String?,
+        contextCueIds: List<String>,
+        targetSeekMs: Long?,
+        contextNote: String?
+    ) {
+        showInterventionBanner(reasonCode, intervalId, contextCueIds, targetSeekMs)
+    }
     fun hideInterventionBanner()
 }
 
@@ -77,8 +86,19 @@ class Media3ExoPlayerController(
         contextCueIds: List<String>,
         targetSeekMs: Long?
     ) {
+        showInterventionBanner(reasonCode, intervalId, contextCueIds, targetSeekMs, null)
+    }
+
+    override fun showInterventionBanner(
+        reasonCode: String,
+        intervalId: String?,
+        contextCueIds: List<String>,
+        targetSeekMs: Long?,
+        contextNote: String?
+    ) {
         val cues = if (contextCueIds.isEmpty()) "none" else contextCueIds.joinToString(",")
-        val msg = "INTERVENTION [$reasonCode] interval=${intervalId ?: "N/A"} targetSeek=${targetSeekMs ?: "N/A"} cues=$cues"
+        val noteSuffix = if (!contextNote.isNullOrBlank()) " | Note: \"$contextNote\"" else ""
+        val msg = "INTERVENTION [$reasonCode] interval=${intervalId ?: "N/A"} targetSeek=${targetSeekMs ?: "N/A"} cues=$cues$noteSuffix"
         onBannerUpdate(true, msg)
     }
 
@@ -268,11 +288,12 @@ class FireShieldPlayerGateBridge(
         reasonCode: String,
         intervalId: String?,
         cues: List<String>,
-        targetSeekMs: Long?
+        targetSeekMs: Long?,
+        contextNote: String? = null
     ) {
         player.pause()
         player.setShutterSurfaceBlanked(true)
-        player.showInterventionBanner(reasonCode, intervalId, cues, targetSeekMs)
+        player.showInterventionBanner(reasonCode, intervalId, cues, targetSeekMs, contextNote)
     }
 
     private fun failClosedUncertainState(positionMs: Long, reasonCode: String, detail: String): PlayerCommand {
@@ -472,7 +493,8 @@ class FireShieldPlayerGateBridge(
                     requiresSurfaceBlanking = true,
                     intervalId = interval.intervalId,
                     hazardTypes = interval.types,
-                    contextCueIds = interval.contextCueIds
+                    contextCueIds = interval.contextCueIds,
+                    contextNote = interval.contextNote
                 )
             }
 
@@ -483,7 +505,7 @@ class FireShieldPlayerGateBridge(
 
             return when {
                 interval.policy == "hold_playback" -> {
-                    forcePauseAndBlank("POLICY_HOLD_$triggerKind", interval.intervalId, interval.contextCueIds, null)
+                    forcePauseAndBlank("POLICY_HOLD_$triggerKind", interval.intervalId, interval.contextCueIds, null, interval.contextNote)
                     PlayerCommand(
                         action = PlayerActionType.HOLD,
                         state = FireShieldState.INTERVENING,
@@ -492,7 +514,8 @@ class FireShieldPlayerGateBridge(
                         requiresSurfaceBlanking = true,
                         intervalId = interval.intervalId,
                         hazardTypes = interval.types,
-                        contextCueIds = interval.contextCueIds
+                        contextCueIds = interval.contextCueIds,
+                        contextNote = interval.contextNote
                     )
                 }
                 interval.policy == "seek_to_safe_resume" ||
@@ -501,7 +524,7 @@ class FireShieldPlayerGateBridge(
                 }
                 else -> {
                     val reason = "POLICY_PREEMPTIVE_PAUSE_$triggerKind"
-                    forcePauseAndBlank(reason, interval.intervalId, interval.contextCueIds, interval.safeResumeMs)
+                    forcePauseAndBlank(reason, interval.intervalId, interval.contextCueIds, interval.safeResumeMs, interval.contextNote)
                     PlayerCommand(
                         action = PlayerActionType.PAUSE,
                         state = FireShieldState.INTERVENING,
@@ -511,7 +534,8 @@ class FireShieldPlayerGateBridge(
                         targetSeekMs = interval.safeResumeMs,
                         intervalId = interval.intervalId,
                         hazardTypes = interval.types,
-                        contextCueIds = interval.contextCueIds
+                        contextCueIds = interval.contextCueIds,
+                        contextNote = interval.contextNote
                     )
                 }
             }

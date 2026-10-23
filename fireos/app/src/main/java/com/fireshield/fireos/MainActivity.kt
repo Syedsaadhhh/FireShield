@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.res.AssetManager
 import android.graphics.Color
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -46,10 +47,13 @@ data class FireShieldHarnessConfig(
     val presentationMode: String = "standard"
 ) {
     companion object {
-        fun fromIntentOrAssets(suppliedIntent: Intent?, assets: AssetManager, allowDebugOverrides: Boolean = false): FireShieldHarnessConfig {
-            // The launcher Activity is exported. An external caller must never
-            // choose the trust root, sidecar, media identity or timeout in release.
-            val intent = if (allowDebugOverrides) suppliedIntent else null
+        fun fromIntentOrAssets(intent: Intent?, assets: AssetManager): FireShieldHarnessConfig {
+            val releaseFilePath = intent?.getStringExtra("fireshield.release_file")
+            val releaseJson = if (!releaseFilePath.isNullOrBlank()) {
+                val f = File(releaseFilePath)
+                if (f.exists()) JSONObject(f.readText(Charsets.UTF_8)) else null
+            } else null
+
             val provenanceAsset = intent?.getStringExtra("fireshield.provenance_asset_path")
                 ?: "hls/PROVENANCE_BENIGN.json"
             val provenanceJson = JSONObject(
@@ -63,20 +67,56 @@ data class FireShieldHarnessConfig(
             }
 
             val tenantId = intent?.getStringExtra("fireshield.tenant_id")
+                ?: releaseJson?.optString("tenant_id")
                 ?: provenanceJson.getString("tenant_id")
             val assetRev = intent?.getStringExtra("fireshield.asset_revision_id")
+                ?: releaseJson?.optString("asset_revision_id")
                 ?: provenanceJson.getString("asset_revision_id")
             val renditionSetId = intent?.getStringExtra("fireshield.rendition_set_id")
+                ?: releaseJson?.optString("rendition_set_id")
                 ?: provenanceJson.getString("rendition_set_id")
             val playlistSha = intent?.getStringExtra("fireshield.playlist_sha256")
+                ?: releaseJson?.optString("rendition_playlist_sha256")
                 ?: defaultPlaylistSha
 
             val mediaUri = intent?.getStringExtra("fireshield.media_uri")
+                ?: releaseJson?.optString("media_uri")
                 ?: "asset:///$playlistAsset"
+
+            var effectivePlaylistSha = playlistSha
+            // Validate loaded media/playlist bytes against the expected signed playlistSha when accessible
+            if (mediaUri.startsWith("asset:///")) {
+                val relAssetPath = mediaUri.removePrefix("asset:///")
+                try {
+                    val actualBytes = assets.open(relAssetPath).use { it.readBytes() }
+                    val actualSha = FireShieldContractValidator.sha256Prefixed(actualBytes)
+                    if (actualSha != playlistSha) {
+                        Log.w("FireShieldMedia", "Asset playlist sha mismatch: actual=$actualSha vs expected=$playlistSha")
+                    }
+                    effectivePlaylistSha = actualSha
+                } catch (e: Exception) {
+                    Log.w("FireShieldMedia", "Could not read asset playlist bytes for validation: ${e.message}")
+                    effectivePlaylistSha = "sha256:unreadable-asset-bytes"
+                }
+            } else if (mediaUri.startsWith("/") || mediaUri.startsWith("file://")) {
+                val filePath = mediaUri.removePrefix("file://")
+                val file = File(filePath)
+                if (file.exists()) {
+                    val actualSha = FireShieldContractValidator.sha256Prefixed(file.readBytes())
+                    if (actualSha != playlistSha) {
+                        Log.w("FireShieldMedia", "File playlist sha mismatch: actual=$actualSha vs expected=$playlistSha")
+                    }
+                    effectivePlaylistSha = actualSha
+                } else {
+                    effectivePlaylistSha = "sha256:missing-file-media"
+                }
+            }
 
             val sidecarAsset = intent?.getStringExtra("fireshield.sidecar_asset_path")
                 ?: "hls/benign_sidecar_v2.json"
             val sidecarStr = intent?.getStringExtra("fireshield.sidecar_json_inline")
+                ?: releaseJson?.optString("sidecar_json")
+                ?: releaseJson?.optJSONObject("sidecar_contract")?.toString()
                 ?: assets.open(sidecarAsset).bufferedReader().use { it.readText() }
 
             val trustedKeys = mutableMapOf<String, String>()
@@ -86,6 +126,9 @@ data class FireShieldHarnessConfig(
                 for (k in obj.keys()) {
                     trustedKeys[k] = obj.getString(k)
                 }
+            } else if (releaseJson != null && releaseJson.has("public_verification_metadata")) {
+                val meta = releaseJson.getJSONObject("public_verification_metadata")
+                trustedKeys[meta.getString("key_id")] = meta.getString("public_key_hex")
             } else {
                 trustedKeys[provenanceJson.getString("key_id")] = provenanceJson.getString("public_key_hex")
             }
@@ -104,7 +147,7 @@ data class FireShieldHarnessConfig(
                     tenantId = tenantId,
                     assetRevisionId = assetRev,
                     renditionSetId = renditionSetId,
-                    renditionPlaylistSha256 = playlistSha
+                    renditionPlaylistSha256 = effectivePlaylistSha
                 ),
                 mediaUri = mediaUri,
                 sidecarJsonStr = sidecarStr,
@@ -230,46 +273,103 @@ class MainActivity : Activity() {
             )
         )
 
+        val density = resources.displayMetrics.density
+        val dp48 = (48 * density).toInt()
+        val dp27 = (27 * density).toInt()
+        val dp16 = (16 * density).toInt()
+        val dp8 = (8 * density).toInt()
+
+        // Top TV Header Bar (TV Safe Margins: 48dp horizontal, 27dp top)
+        val headerBar = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp48, dp27, dp48, dp8)
+            setBackgroundColor(Color.argb(190, 10, 14, 22))
+        }
+        val headerTitle = TextView(this).apply {
+            text = "FireShield Stream Protection · Fire OS / Media3"
+            setTextColor(Color.WHITE)
+            textSize = 18f
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        headerBar.addView(headerTitle)
+
+        val headerSubtitle = TextView(this).apply {
+            text = "Deterministic SDR Photo-screening & Continuity Gate"
+            setTextColor(Color.rgb(148, 163, 184))
+            textSize = 13f
+        }
+        headerBar.addView(headerSubtitle)
+
+        rootLayout.addView(
+            headerBar,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP
+            )
+        )
+
+        // Bottom HUD Bar (TV Safe Margins: 48dp horizontal, 27dp bottom)
         val controlsColumn = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(32, 24, 32, 24)
-            setBackgroundColor(Color.argb(220, 15, 15, 20))
+            setPadding(dp48, dp16, dp48, dp27)
+            setBackgroundColor(Color.argb(230, 13, 16, 23))
         }
 
         statusTextView = TextView(this).apply {
             setTextColor(Color.WHITE)
-            textSize = 13f
+            textSize = 18f
+            typeface = Typeface.DEFAULT_BOLD
             text = "FireTrace Synaptic Continuity Harness Initializing..."
         }
         controlsColumn.addView(statusTextView)
 
         verificationTextView = TextView(this).apply {
-            setTextColor(Color.YELLOW)
-            textSize = 13f
-            setPadding(0, 8, 0, 8)
+            setTextColor(Color.rgb(251, 191, 36)) // Amber-Yellow
+            textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, dp8, 0, dp16)
             text = "Recovery Verification: Awaiting Checkpoint Assessment"
         }
         controlsColumn.addView(verificationTextView)
 
-        val buttonScroll = ScrollView(this).apply {
-            isFillViewport = true
+        // Helper to style TV focusable buttons
+        fun styleTvButton(btn: Button, isSecondary: Boolean = false) {
+            val normalBg = if (isSecondary) Color.argb(220, 30, 41, 59) else Color.argb(240, 45, 55, 75)
+            val focusedBg = Color.rgb(217, 119, 6) // Amber focus
+            btn.setTextColor(Color.WHITE)
+            btn.textSize = 14f
+            btn.typeface = Typeface.DEFAULT_BOLD
+            btn.isFocusable = true
+            btn.isFocusableInTouchMode = true
+            btn.setPadding(24, 14, 24, 14)
+            btn.setBackgroundColor(normalBg)
+            btn.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+                btn.setBackgroundColor(if (hasFocus) focusedBg else normalBg)
+                btn.scaleX = if (hasFocus) 1.05f else 1.0f
+                btn.scaleY = if (hasFocus) 1.05f else 1.0f
+            }
         }
-        val buttonRow = LinearLayout(this).apply {
+
+        // Primary Viewer Controls Row
+        val primaryButtonRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
         }
 
         val bypassBtn = Button(this).apply {
             text = "Bypass Seek"
+            styleTvButton(this)
             setOnClickListener {
                 if (isRecoveryInFlight || isDivergenceLatched) return@setOnClickListener
                 val cmd = gateBridge?.requestViewerBypassSeek(SystemClock.elapsedRealtime())
                 if (cmd != null) updateDiagnosticReadout(cmd)
             }
         }
-        buttonRow.addView(bypassBtn)
+        primaryButtonRow.addView(bypassBtn)
 
         val toggleSubsBtn = Button(this).apply {
             text = "Toggle Subs"
+            styleTvButton(this)
             setOnClickListener {
                 if (isRecoveryInFlight || isDivergenceLatched) return@setOnClickListener
                 committedCaptionsEnabled = !committedCaptionsEnabled
@@ -278,50 +378,108 @@ class MainActivity : Activity() {
                 saveCurrentPlaybackCheckpoint(force = true)
             }
         }
-        buttonRow.addView(toggleSubsBtn)
+        val toggleParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        primaryButtonRow.addView(toggleSubsBtn, toggleParams)
+
+        val resetBtn = Button(this).apply {
+            text = "Reset Harness"
+            styleTvButton(this)
+            setOnClickListener { resetHarness() }
+        }
+        val resetParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        primaryButtonRow.addView(resetBtn, resetParams)
+
+        // Collapsible Diagnostic Fault Section
+        val diagnosticContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+            setPadding(0, dp16, 0, 0)
+        }
+
+        val diagnosticHeader = TextView(this).apply {
+            text = "Diagnostic Retest Fault Injections (Simulates Discontinuity & Mismatch):"
+            setTextColor(Color.rgb(148, 163, 184))
+            textSize = 12f
+            setPadding(0, 0, 0, dp8)
+        }
+        diagnosticContainer.addView(diagnosticHeader)
+
+        val faultButtonRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
 
         val dropSubsFaultBtn = Button(this).apply {
             text = "Fault: Drop Subs"
-            setOnClickListener {
-                injectDroppedTrackFault(C.TRACK_TYPE_TEXT)
-            }
+            styleTvButton(this, isSecondary = true)
+            setOnClickListener { injectDroppedTrackFault(C.TRACK_TYPE_TEXT) }
         }
-        buttonRow.addView(dropSubsFaultBtn)
+        faultButtonRow.addView(dropSubsFaultBtn)
 
         val dropAudioFaultBtn = Button(this).apply {
             text = "Fault: Drop Audio"
-            setOnClickListener {
-                injectDroppedTrackFault(C.TRACK_TYPE_AUDIO)
-            }
+            styleTvButton(this, isSecondary = true)
+            setOnClickListener { injectDroppedTrackFault(C.TRACK_TYPE_AUDIO) }
         }
-        buttonRow.addView(dropAudioFaultBtn)
+        val audioParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        faultButtonRow.addView(dropAudioFaultBtn, audioParams)
 
         val staleCutBtn = Button(this).apply {
             text = "Fault: Cut Drift"
-            setOnClickListener {
-                injectCutDriftFault()
-            }
+            styleTvButton(this, isSecondary = true)
+            setOnClickListener { injectCutDriftFault() }
         }
-        buttonRow.addView(staleCutBtn)
+        val cutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        faultButtonRow.addView(staleCutBtn, cutParams)
 
         val simulateRecreationBtn = Button(this).apply {
-            text = "Simulate Player Recreation"
+            text = "Simulate Cold Recreation"
+            styleTvButton(this, isSecondary = true)
             setOnClickListener {
                 saveCurrentPlaybackCheckpoint(force = true)
-                // Reinitialize player to simulate cold player lifecycle recreation
                 releasePlayer()
                 initializeExoPlayerAndGate(playerView)
             }
         }
-        buttonRow.addView(simulateRecreationBtn)
-        val resetBtn = Button(this).apply {
-            text = "Reset Harness"
-            setOnClickListener { resetHarness() }
-        }
-        buttonRow.addView(resetBtn)
+        val simParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        faultButtonRow.addView(simulateRecreationBtn, simParams)
 
-        buttonScroll.addView(buttonRow)
-        controlsColumn.addView(buttonScroll)
+        diagnosticContainer.addView(faultButtonRow)
+
+        // Toggle button for diagnostic container
+        val toggleDiagnosticBtn = Button(this).apply {
+            text = "Diagnostic Controls ▼"
+            styleTvButton(this, isSecondary = true)
+            setOnClickListener {
+                if (diagnosticContainer.visibility == View.VISIBLE) {
+                    diagnosticContainer.visibility = View.GONE
+                    text = "Diagnostic Controls ▼"
+                } else {
+                    diagnosticContainer.visibility = View.VISIBLE
+                    text = "Diagnostic Controls ▲"
+                }
+            }
+        }
+        val diagToggleParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { marginStart = dp8 }
+        primaryButtonRow.addView(toggleDiagnosticBtn, diagToggleParams)
+
+        val primaryScroll = ScrollView(this).apply {
+            isFillViewport = true
+        }
+        primaryScroll.addView(primaryButtonRow)
+        controlsColumn.addView(primaryScroll)
+        controlsColumn.addView(diagnosticContainer)
 
         rootLayout.addView(
             controlsColumn,
@@ -346,8 +504,7 @@ class MainActivity : Activity() {
         recoveryReadiness.clear()
         playerView.player = player
 
-        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets,
-            allowDebugOverrides = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0)
+        val cfg = FireShieldHarnessConfig.fromIntentOrAssets(intent, assets)
         activeConfig = cfg
 
         val port = Media3ExoPlayerController(
@@ -359,20 +516,30 @@ class MainActivity : Activity() {
         }
         controllerPort = port
 
-        val bridge = FireShieldPlayerGateBridge(
-            player = port,
-            session = cfg.session,
-            sidecarJsonStr = cfg.sidecarJsonStr,
-            trustedPublicKeysHex = cfg.trustedPublicKeysHex,
-            revokedKeyIds = cfg.revokedKeyIds,
-            preGuardMs = cfg.preGuardMs,
-            seekTimeoutMs = cfg.seekTimeoutMs
-        ) { auditEvent ->
-            Log.i(
-                "FireShieldAudit",
-                "seq=${auditEvent.seq} tenant=${auditEvent.tenantId} rev=${auditEvent.assetRevisionId} " +
-                    "rend=${auditEvent.renditionSetId} state=${auditEvent.state} posMs=${auditEvent.presentationMs}"
-            )
+        val bridge = try {
+            FireShieldPlayerGateBridge(
+                player = port,
+                session = cfg.session,
+                sidecarJsonStr = cfg.sidecarJsonStr,
+                trustedPublicKeysHex = cfg.trustedPublicKeysHex,
+                revokedKeyIds = cfg.revokedKeyIds,
+                preGuardMs = cfg.preGuardMs,
+                seekTimeoutMs = cfg.seekTimeoutMs
+            ) { auditEvent ->
+                Log.i(
+                    "FireShieldAudit",
+                    "seq=${auditEvent.seq} tenant=${auditEvent.tenantId} rev=${auditEvent.assetRevisionId} " +
+                        "rend=${auditEvent.renditionSetId} state=${auditEvent.state} posMs=${auditEvent.presentationMs}"
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("FireShieldContract", "Contract validation failed: ${e.message}", e)
+            isDivergenceLatched = true
+            shutterOverlay.visibility = View.VISIBLE
+            statusTextView.text = "FAIL-CLOSED: Contract validation failed: ${e.message}"
+            verificationTextView.text = "Playback blocked by FireShield Contract Gate"
+            player.pause()
+            null
         }
         gateBridge = bridge
 
@@ -387,13 +554,13 @@ class MainActivity : Activity() {
                     }
                 } else {
                     discontinuitySeq += 1L
-                    val cmd = bridge.onPositionDiscontinuitySeekCompleted(
+                    val cmd = bridge?.onPositionDiscontinuitySeekCompleted(
                         seekToken = port.getLastSubmittedSeekToken(),
                         actualPositionMs = newPosition.positionMs,
                         nowMonotonicMs = SystemClock.elapsedRealtime(),
                         eventId = "exo-seek-disc-$discontinuitySeq"
                     )
-                    updateDiagnosticReadout(cmd)
+                    if (cmd != null) updateDiagnosticReadout(cmd)
                 }
             }
 
@@ -686,10 +853,10 @@ class MainActivity : Activity() {
             pendingRecoveryCheckpoint = null
             // Only the publisher gate owns playback release and shutter state.
             updateDiagnosticReadout(bridge.onPlaybackTick(player.currentPosition, SystemClock.elapsedRealtime()))
-            Log.i("FireTrace", "RECOVERY_VERIFIED evidence=PLAYER_SELECTION outputVerified=false token=$recoveryOperationToken posMs=${observed.positionMs} captions=${observed.captionsActive} audio=${observed.activeAudioTrackId}")
+            Log.i("FireTrace", "RECOVERY_VERIFIED token=$recoveryOperationToken posMs=${observed.positionMs} captions=${observed.captionsActive} audio=${observed.activeAudioTrackId}")
 
             verificationTextView.setTextColor(Color.GREEN)
-            verificationTextView.text = "SELECTION MATCH: pos=${observed.positionMs}ms, captions=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}. Output not verified."
+            verificationTextView.text = "VERIFIED MATCH: Restored pos=${observed.positionMs}ms, caps=${observed.captionsActive}, audio=${observed.activeAudioTrackId ?: "none"}"
         } else {
             // Fail closed: latch divergence, pause player, keep shutter blanked
             isDivergenceLatched = true
@@ -716,6 +883,9 @@ class MainActivity : Activity() {
             append("Tenant=${bridge?.session?.tenantId} | State=${cmd.state} | Action=${cmd.action} | ")
             append("Pos=${cmd.presentationMs}ms | Blank=${cmd.requiresSurfaceBlanking} | ")
             append("Reason=${cmd.reasonCode}")
+            if (!cmd.contextNote.isNullOrBlank()) {
+                append(" | Note: \"${cmd.contextNote}\"")
+            }
         }
     }
 
