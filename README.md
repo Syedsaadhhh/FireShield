@@ -50,7 +50,9 @@ Install `fireos/app/build/outputs/apk/debug/app-debug.apk` on an Android TV emul
 
 On **23 October 2026**, **111 Python tests passed** on Python 3.12 with FFmpeg available, including the recovered Run 8 API/pipeline tests and the earlier receipt-boundary tests. JavaScript parsing and interactive browser checks are performed separately.
 
-The earlier recovery revision [`117b6d7`](https://github.com/Syedsaadhhh/FireShield/commit/117b6d7a3e9dc8b8a1cc0493cf5681bdba4ee137) passed cloud Python/native build checks and recorded four actual Android TV scenarios: playback, player recreation, dropped captions, and stale-edition rejection. Those artifacts belong to that revision. **Consult the exact current commit's [GitHub Actions](https://github.com/Syedsaadhhh/FireShield/actions) results for the newer Run 8 native build and recordings.** A configured workflow is not proof of a successful run.
+The integrated Run 8 source revision [`ed02cb3`](https://github.com/Syedsaadhhh/FireShield/commit/ed02cb3bff9f55798ecba6e000a0fefe379fed8b) passed **111 Python tests, 25 Kotlin unit tests, and native debug/release builds** in [cloud verification](https://github.com/Syedsaadhhh/FireShield/actions/runs/39959304604). Interactive operator checks completed at 1440px desktop and 390px mobile with no JavaScript errors or document-width overflow.
+
+Its [Android TV recording run](https://github.com/Syedsaadhhh/FireShield/actions/runs/39959304569) also passed all **four native scenarios**: playback, player recreation, deliberately dropped captions, and stale-edition rejection. The downloadable artifact contains the APK, actual emulator captures, receipts, run identity and unit-test report. These are controlled debug-harness scenarios on Android TV API 28; they do not establish physical Fire TV coverage or rendered caption/audio correctness. Artifact retention is seven days, so retain the needed recordings before they expire.
 
 `rescue/run8-20261023` preserves the original recovered laptop source. Main integrates that source with portable build/verification fixes and accurate evidence labels. The laptop's working directory is preserved separately.
 
