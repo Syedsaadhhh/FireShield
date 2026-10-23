@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo
 import android.content.res.AssetManager
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -179,6 +180,11 @@ data class FireShieldHarnessConfig(
  *    not proof of rendered frame output.
  */
 class MainActivity : Activity() {
+    private lateinit var contextPanel: LinearLayout
+    private lateinit var contextHeading: TextView
+    private lateinit var contextCaption: TextView
+    private lateinit var contextBody: TextView
+    private lateinit var skipMomentButton: Button
 
     private var exoPlayer: ExoPlayer? = null
     private var gateBridge: FireShieldPlayerGateBridge? = null
@@ -284,6 +290,40 @@ class MainActivity : Activity() {
         val dp16 = (16 * density).toInt()
         val dp8 = (8 * density).toInt()
 
+        contextPanel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp27, dp27, dp27, dp27)
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(20, 24, 34))
+                cornerRadius = 12 * density
+                setStroke((1 * density).toInt().coerceAtLeast(1), Color.rgb(104, 85, 48))
+            }
+            visibility = View.GONE
+        }
+        contextHeading = TextView(this).apply {
+            text = "A moment, protected."
+            textSize = 26f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.rgb(248, 245, 236))
+        }
+        contextPanel.addView(contextHeading)
+        contextBody = TextView(this).apply {
+            textSize = 19f
+            setTextColor(Color.rgb(224, 226, 230))
+            setPadding(0, dp16, 0, dp16)
+            setLineSpacing(4 * density, 1f)
+        }
+        contextPanel.addView(contextBody)
+        contextCaption = TextView(this).apply {
+            text = "Publisher-reviewed context · Continue with Skip this moment"
+            textSize = 12f
+            setTextColor(Color.rgb(215, 188, 131))
+        }
+        contextPanel.addView(contextCaption)
+        rootLayout.addView(contextPanel, FrameLayout.LayoutParams(
+            minOf(resources.displayMetrics.widthPixels - dp48 * 2, (640 * density).toInt()),
+            FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER))
+
         // Top TV Header Bar (TV Safe Margins: 48dp horizontal, 27dp top)
         val headerBar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -291,7 +331,7 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.argb(190, 10, 14, 22))
         }
         val headerTitle = TextView(this).apply {
-            text = "FireShield Stream Protection · Fire OS / Media3"
+            text = "FireShield"
             setTextColor(Color.WHITE)
             textSize = 18f
             typeface = Typeface.DEFAULT_BOLD
@@ -299,7 +339,7 @@ class MainActivity : Activity() {
         headerBar.addView(headerTitle)
 
         val headerSubtitle = TextView(this).apply {
-            text = "Deterministic SDR Photo-screening & Continuity Gate"
+            text = "Screening. Context. Continuity."
             setTextColor(Color.rgb(148, 163, 184))
             textSize = 13f
         }
@@ -323,18 +363,17 @@ class MainActivity : Activity() {
 
         statusTextView = TextView(this).apply {
             setTextColor(Color.WHITE)
-            textSize = 18f
+            textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             text = "FireTrace Synaptic Continuity Harness Initializing..."
         }
-        controlsColumn.addView(statusTextView)
 
         verificationTextView = TextView(this).apply {
             setTextColor(Color.rgb(251, 191, 36)) // Amber-Yellow
-            textSize = 16f
+            textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp8, 0, dp16)
-            text = "Recovery Verification: Awaiting Checkpoint Assessment"
+            text = "FireTrace ready · A checkpoint will be checked after interruption"
         }
         controlsColumn.addView(verificationTextView)
 
@@ -362,7 +401,7 @@ class MainActivity : Activity() {
         }
 
         val bypassBtn = Button(this).apply {
-            text = "Bypass Seek"
+            text = "Skip this moment"
             styleTvButton(this)
             setOnClickListener {
                 if (isRecoveryInFlight || isDivergenceLatched) return@setOnClickListener
@@ -370,10 +409,11 @@ class MainActivity : Activity() {
                 if (cmd != null) updateDiagnosticReadout(cmd)
             }
         }
+        skipMomentButton = bypassBtn
         primaryButtonRow.addView(bypassBtn)
 
         val toggleSubsBtn = Button(this).apply {
-            text = "Toggle Subs"
+            text = "Captions"
             styleTvButton(this)
             setOnClickListener {
                 if (isRecoveryInFlight || isDivergenceLatched) return@setOnClickListener
@@ -396,7 +436,6 @@ class MainActivity : Activity() {
         val resetParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { marginStart = dp8 }
-        primaryButtonRow.addView(resetBtn, resetParams)
 
         // Collapsible Diagnostic Fault Section
         val diagnosticContainer = LinearLayout(this).apply {
@@ -404,6 +443,8 @@ class MainActivity : Activity() {
             visibility = View.GONE
             setPadding(0, dp16, 0, 0)
         }
+        diagnosticContainer.addView(statusTextView)
+        diagnosticContainer.addView(resetBtn, resetParams)
 
         val diagnosticHeader = TextView(this).apply {
             text = "Diagnostic Retest Fault Injections (Simulates Discontinuity & Mismatch):"
@@ -699,6 +740,11 @@ class MainActivity : Activity() {
         shutterOverlay.visibility = View.VISIBLE
         verificationTextView.setTextColor(Color.RED)
         verificationTextView.text = "RECOVERY BLOCKED: $reason (paused and blanked)"
+        contextPanel.visibility = View.VISIBLE
+        contextHeading.text = "Your session is on hold."
+        contextCaption.text = "FireTrace · Playback stays paused for inspection"
+        contextBody.text = "The recovery check could not be completed. Playback remains paused for inspection."
+        skipMomentButton.isEnabled = false
         Log.e("FireTrace", "RECOVERY_BLOCKED reason=$reason token=$recoveryOperationToken")
     }
 
@@ -896,6 +942,11 @@ class MainActivity : Activity() {
             )
             activeIncidentReceipt = receipt
             statusTextView.text = "Recovery gate: DIVERGED | Playback=PAUSED | Surface=BLANKED"
+            contextPanel.visibility = View.VISIBLE
+            contextHeading.text = "Your session is on hold."
+        contextCaption.text = "FireTrace · Playback stays paused for inspection"
+            contextBody.text = "Playback changed during recovery. FireTrace detected a mismatch and paused the session for inspection."
+            skipMomentButton.isEnabled = false
             val shortDigest = receipt.optString("receipt_digest", "").take(16)
             verificationTextView.setTextColor(Color.RED)
             verificationTextView.text = "DIVERGENCE DETECTED [${result.mismatchFields.joinToString(", ")}]: Fail-Closed Paused & Blanked (Digest: $shortDigest...)"
@@ -905,6 +956,14 @@ class MainActivity : Activity() {
 
     private fun updateDiagnosticReadout(cmd: PlayerCommand) {
         val bridge = gateBridge
+        val showContext = cmd.requiresSurfaceBlanking && !cmd.contextNote.isNullOrBlank()
+        contextPanel.visibility = if (showContext) View.VISIBLE else View.GONE
+        if (showContext) {
+            contextHeading.text = "A moment, protected."
+            contextCaption.text = "Publisher-reviewed context · Continue with Skip this moment"
+            contextBody.text = cmd.contextNote
+        }
+        skipMomentButton.isEnabled = showContext && !isRecoveryInFlight && !isDivergenceLatched
         statusTextView.text = buildString {
             append("Publisher gate: Tenant=${bridge?.session?.tenantId} | State=${cmd.state} | Action=${cmd.action} | ")
             append("Pos=${cmd.presentationMs}ms | Blank=${cmd.requiresSurfaceBlanking} | ")
