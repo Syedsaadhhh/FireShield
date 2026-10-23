@@ -953,6 +953,13 @@ class LocalPipelineService:
                 f"--es fireshield.trusted_keys_json '{{\"{self.key_id}\": \"{self.public_key_hex}\"}}'"
             )
 
+            # Packaged handoff uses a public release file, avoiding shell-quoted
+            # inline JSON and transferring media separately through the ZIP.
+            if asset and asset.source_path and "/packaged_demo/" in asset.source_path.replace("\\", "/"):
+                cmd = ("adb shell am start -n com.fireshield.fireos/.MainActivity "
+                       "--es fireshield.release_file /data/data/com.fireshield.fireos/files/fireshield-demo/native-release.json "
+                       "--el fireshield.pre_guard_ms 1000")
+
             release_record = PublishedReleaseRecord(
                 release_id=release_id,
                 tenant_id=tenant_id,

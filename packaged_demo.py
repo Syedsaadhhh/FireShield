@@ -108,3 +108,25 @@ def export_native_release(release, asset, destination: pathlib.Path):
             "public_verification_metadata": {"key_id": release.key_id, "public_key_hex": release.public_key_hex}}
     (destination / "native-release.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
     return data
+
+
+def native_bundle_bytes(release, asset):
+    """A bounded public handoff archive. Signing seeds and stores are excluded."""
+    import io
+    import tempfile
+    import zipfile
+    with tempfile.TemporaryDirectory(prefix="fireshield-handoff-") as directory:
+        folder = pathlib.Path(directory)
+        export_native_release(release, asset, folder)
+        (folder / "README.txt").write_text(
+            "FireShield owned media drill. Contains a flashing reference interval.\n"
+            "Do not open content.ts in an ordinary player. Use the publisher gate.\n"
+            "Install the debug APK on a dedicated emulator, then run from the repository:\n"
+            "python tools/install_native_package.py HANDOFF.zip --serial emulator-5554\n"
+            "The package contains public verification data only. It supplies a debug\n"
+            "trust root, not a production key distribution mechanism.\n", encoding="utf-8")
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for file in sorted(folder.iterdir()):
+                archive.write(file, file.name)
+        return buffer.getvalue()

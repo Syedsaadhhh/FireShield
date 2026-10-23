@@ -29,7 +29,7 @@ Open **http://127.0.0.1:8000/operator**. On Windows, `START_FIRESHIELD.bat` star
 
 Local API authentication is a constrained demo tenant, not production identity management. Incidents are held in memory; catalog/review state is persisted under ignored `runtime_data/`. Restarting the service clears ingested incidents. The local signing seed is generated randomly and stays outside Git.
 
-The catalog's **Build actual media drill** action encodes the owned emergency-scene fixture headlessly, registers the exact HLS segment as a new source revision, and keeps flashing content out of the console preview. Screen that new asset, ground and approve its context, commit the editorial decision, then publish. The package is signed against its actual playlist bytes. Install the matching media and public release file in the debug emulator before playback; the console alone does not perform ADB installation.
+The catalog's **Build actual media drill** action encodes the owned emergency-scene fixture headlessly, registers the exact HLS segment as a new source revision, and keeps flashing content out of the console preview. Screen that new asset, ground and approve its context, commit the editorial decision, then publish. The package is signed against its actual playlist bytes. Download **Native handoff ZIP** after publication, install the debug APK, then run `python tools/install_native_package.py HANDOFF.zip --serial emulator-5554`. The installer checks media hashes, transfers the matching media and public release file, and starts a guarded debug session.
 
 ## Verify and build
 

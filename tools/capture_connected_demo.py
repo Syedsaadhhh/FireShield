@@ -3,6 +3,7 @@
 Dedicated debug emulator only. Screenshots start only after a pre-interval
 pause and blank have been verified. The source fixture is never previewed.
 """
+from contextlib import contextmanager
 from pathlib import Path
 import argparse
 import hashlib
@@ -19,6 +20,25 @@ from packaged_demo import APP_FILES, export_native_release, packaging_for_asset,
 from pipeline_service import LocalPipelineService, PipelineServiceError
 from state_engine import PlaybackSessionContext, SidecarContractValidator
 import verify_android_tv as tv
+
+
+@contextmanager
+def record_native_clip(out, serial):
+    remote = '/sdcard/connected_scene.mp4'
+    recorder = subprocess.Popen([tv.ADB, '-s', serial, 'shell', 'screenrecord',
+        '--size', '1280x720', '--bit-rate', '1500000', '--time-limit', '60', remote],
+        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    try:
+        time.sleep(2)
+        yield
+    finally:
+        tv.adb('shell', 'pkill', '-INT', 'screenrecord', check=False)
+        try:
+            recorder.communicate(timeout=15)
+        except subprocess.TimeoutExpired:
+            recorder.terminate()
+            recorder.communicate(timeout=5)
+        tv.adb('pull', remote, str(out / 'connected_scene.mp4'), check=False)
 
 
 def main():
@@ -100,31 +120,38 @@ def main():
     assert held['position_ms'] < min(f['start_ms'] for f in report['findings'])
     assert 'emergency' in held['status'].lower(), 'Signed context must reach the native view'
     # Only capture after the native gate has proven that the source is blanked.
-    tv.capture('connected_context_hold')
-    (out / 'context_hold_snapshot.json').write_text(json.dumps(held, indent=2))
-    tv.action('bypass')
-    cp = tv.wait_for(lambda: (c if (c := tv.checkpoint()) and c['position_ms'] >= 2300
-        and c.get('selected_subtitle_track_id') and c.get('selected_audio_track_id') else None),
-        timeout=35, description='verified bypass to calm tail with selected tracks')
-    assert cp['asset_revision_id'] == asset.asset_revision_id
-    tv.capture('connected_safe_tail')
-    tv.clear_logs()
-    tv.action('drop_subtitles')
-    receipt = tv.wait_for(tv.receipt_from_log, timeout=30, description='same-source native caption-loss receipt')
-    assert 'captions_enabled' in receipt['mismatch_fields']
-    assert receipt['asset_revision_id'] == asset.asset_revision_id
-    assert receipt['rendition_playlist_sha256'] == release.rendition_playlist_sha256
-    detail = tv.validate_native_receipt('connected_caption_loss')
-    fault = snapshot()
-    assert fault['surface_blanked'] is True and fault['is_playing'] is False
-    tv.capture('connected_caption_loss')
-    (out / 'fault_snapshot.json').write_text(json.dumps(fault, indent=2))
+    with record_native_clip(out, opts.serial):
+        tv.capture('connected_context_hold')
+        (out / 'context_hold_snapshot.json').write_text(json.dumps(held, indent=2))
+        time.sleep(3)
+        tv.action('bypass')
+        cp = tv.wait_for(lambda: (c if (c := tv.checkpoint()) and c['position_ms'] >= 2300
+            and c.get('selected_subtitle_track_id') and c.get('selected_audio_track_id') else None),
+            timeout=35, description='verified bypass to calm tail with selected tracks')
+        assert cp['asset_revision_id'] == asset.asset_revision_id
+        tv.capture('connected_safe_tail')
+        time.sleep(3)
+        tv.clear_logs()
+        tv.action('drop_subtitles')
+        receipt = tv.wait_for(tv.receipt_from_log, timeout=30, description='same-source native caption-loss receipt')
+        assert 'captions_enabled' in receipt['mismatch_fields']
+        # Receipt v1 carries edition identity inside expected/observed states.
+        # The captured checkpoint above supplies its source-revision linkage.
+        assert receipt['expected_state']['rendition_playlist_sha256'] == release.rendition_playlist_sha256
+        assert receipt['observed_state']['rendition_playlist_sha256'] == release.rendition_playlist_sha256
+        detail = tv.validate_native_receipt('connected_caption_loss')
+        fault = snapshot()
+        assert fault['surface_blanked'] is True and fault['is_playing'] is False
+        time.sleep(3)
+        tv.capture('connected_caption_loss')
+        (out / 'fault_snapshot.json').write_text(json.dumps(fault, indent=2))
     manifest = {'status': 'PASS', 'platform': 'Android TV API 28 emulator',
         'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'asset_revision_id': asset.asset_revision_id, 'release_id': release.release_id,
         'rendition_playlist_sha256': release.rendition_playlist_sha256,
         'encoded_frames_screened': report['total_frames'], 'candidate_count': len(report['findings']),
         'signed_context_reached_native': True, 'pre_interval_hold': held,
+        'receipt_linkage': 'Expected and observed playlist identities match the release; checkpoint binds the source revision',
         'native_bypass_checkpoint': cp, 'native_receipt_retest': detail,
         'output_verified': False, 'scope': 'Controlled debug emulator. Player selection verification, not physical-device or rendered-output certification.',
         'files': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in package.iterdir() if p.is_file()}}

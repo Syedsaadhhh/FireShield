@@ -1969,7 +1969,7 @@
 
             <div style="display: flex; gap: 6px; margin-top: 8px;">
 
-              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="copyIntentCmd()">Copy Command</button>
+              <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" id="btn-native-bundle" onclick="downloadNativeBundle()">Native handoff ZIP</button>
 
               <button class="btn btn-secondary" style="flex: 1; font-size: 11px;" onclick="downloadSidecar()">Sidecar JSON</button>
 
@@ -2836,6 +2836,7 @@
         if (!resp.ok) throw new Error(release.error || 'Publication rejected.');
         if (!selectedAsset || selectedAsset.asset_id !== assetId) return;
         activeRelease = release;
+        document.getElementById('btn-native-bundle').disabled = !packaging.media_uri.includes('fireshield-demo/');
         document.getElementById('pub-status-tag').className = 'status-tag tag-published';
         document.getElementById('pub-status-tag').textContent = packaging.source_mapping_verified ? 'SIGNED FIXTURE' : 'SIGNED REFERENCE';
         document.getElementById('published-release-details').style.display = 'block';
@@ -2848,6 +2849,15 @@
         btn.disabled = !currentReport || currentReport.review_state !== 'approved';
         btn.textContent = 'Sign & Publish Ed25519 Sidecar';
       }
+    }
+
+    function downloadNativeBundle() {
+      if (!activeRelease) return;
+      const link = document.createElement('a');
+      link.href = `${API_BASE}/api/v1/releases/${encodeURIComponent(activeRelease.release_id)}/native-bundle.zip`;
+      link.download = `${activeRelease.release_id}-native.zip`;
+      link.click();
+      setFeedback('publish-feedback', 'Install the ZIP with tools/install_native_package.py after installing the debug APK. The launch command expects those files.', 'info');
     }
 
     function copyIntentCmd() {

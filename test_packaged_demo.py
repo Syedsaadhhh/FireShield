@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import pipeline_service as domain
-from packaged_demo import prepare_package, packaging_for_asset, export_native_release
+from packaged_demo import prepare_package, packaging_for_asset, export_native_release, native_bundle_bytes
 from pipeline_service import LocalPipelineService, PipelineServiceError
 from screening_analyzer import find_ffmpeg_executable
 
@@ -57,6 +57,13 @@ def test_encoded_media_review_and_export_keep_one_identity(service, tmp_path):
     assert exported['asset_revision_id'] == asset.asset_revision_id
     assert json.loads(exported['sidecar_json'])['asset_revision_id'] == asset.asset_revision_id
     assert (tmp_path / 'native/media.m3u8').read_text() == release.playlist_manifest
+    import io, zipfile
+    bundle = native_bundle_bytes(release, asset)
+    with zipfile.ZipFile(io.BytesIO(bundle)) as archive:
+        assert set(archive.namelist()) == {'content.ts', 'media.m3u8', 'context.vtt', 'native-release.json', 'README.txt'}
+        public_release = json.loads(archive.read('native-release.json'))
+        assert public_release['public_verification_metadata']['public_key_hex'] == release.public_key_hex
+        assert 'private_key_seed_32b' not in public_release
     # A changed segment can no longer inherit the old screening approval.
     original = source.read_bytes()
     try:

@@ -747,6 +747,25 @@ def create_wsgi_app(
                 return [body]
 
             # Route 18: Release Sidecar Download
+            m_bundle = re.match(r"^/api/v1/releases/([a-zA-Z0-9_\-\.]+)/native-bundle\.zip$", path)
+            if m_bundle and method == "GET":
+                from packaged_demo import native_bundle_bytes
+                service = api.pipeline_service
+                release = service.get_release(m_bundle.group(1), auth.tenant_id)
+                asset = next((service.get_asset(a["asset_id"], auth.tenant_id)
+                    for a in service.list_assets(auth.tenant_id)
+                    if a["asset_revision_id"] == release.asset_revision_id), None)
+                if asset is None:
+                    raise ApiError("Release source asset unavailable", 409)
+                try:
+                    body = native_bundle_bytes(release, asset)
+                except ValueError as exc:
+                    raise ApiError(str(exc), 409) from exc
+                start_response("200 OK", [("Content-Type", "application/zip"),
+                    ("Content-Length", str(len(body))),
+                    ("Content-Disposition", f'attachment; filename="{release.release_id}-native.zip"')])
+                return [body]
+
             m_sidecar = re.match(r"^/api/v1/releases/([a-zA-Z0-9_\-\.]+)/sidecar\.json$", path)
             if m_sidecar and method == "GET":
                 rel = api.pipeline_service.get_release(m_sidecar.group(1), auth.tenant_id)

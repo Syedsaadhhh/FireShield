@@ -266,3 +266,5 @@ All error responses strictly adhere to:
 `GET /api/v1/demo/packaging/{asset_id}` returns that asset's exact playlist after checking segment identity. The package uses an app-private native debug path. Install it through `tools/capture_connected_demo.py`; copying an intent command alone does not transfer media.
 
 A dedicated Android TV emulator can run `python tools/capture_connected_demo.py --serial emulator-5554` after the debug APK is installed. This controlled harness supplies the review decision, verifies a blanked pre-interval context hold, bypasses into a calm tail, injects caption loss, and checks the receipt against the same source and playlist. It reports player-selection evidence, not rendered-output certification. Release builds ignore its external debug configuration.
+
+`GET /api/v1/releases/{release_id}/native-bundle.zip` downloads only the exact HLS media, WebVTT, public verification key and release contract. It excludes signing seeds and local stores. After installing the debug APK, run `python tools/install_native_package.py HANDOFF.zip --serial emulator-5554` to transfer the files and launch the guarded drill.
