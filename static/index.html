@@ -1684,6 +1684,11 @@
 
       </div>
 
+      <div style="padding: 0 12px 12px;">
+        <button class="btn btn-secondary" id="btn-package-drill" onclick="buildMediaDrill()" style="width:100%;">Build actual media drill</button>
+        <div id="package-feedback" class="inline-feedback-banner" role="status"></div>
+      </div>
+
       <div class="asset-list" id="asset-list-container">
 
         <!-- Rendered via JavaScript -->
@@ -2300,6 +2305,26 @@
 
     // Assets Catalog
 
+    async function buildMediaDrill() {
+      const button = document.getElementById('btn-package-drill');
+      button.disabled = true;
+      button.textContent = 'Packaging owned media…';
+      setFeedback('package-feedback', 'Encoding headlessly. The preview does not play flashing content.', 'info');
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/demo/package`, {method:'POST', signal:AbortSignal.timeout(60000)});
+        const asset = await response.json();
+        if (!response.ok) throw new Error(asset.error || 'Media package failed. Check FFmpeg installation.');
+        await loadAssets();
+        await selectAsset(asset.asset_id);
+        setFeedback('package-feedback', 'Actual media ready. Run screening, review its context, then publish.', 'success');
+      } catch(error) {
+        setFeedback('package-feedback', error.message, 'error');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Build actual media drill';
+      }
+    }
+
     async function loadAssets() {
 
       try {
@@ -2362,7 +2387,7 @@
 
             tagClass = "tag-clean";
 
-            tagText = "Clean";
+            tagText = "No candidates";
 
           } else {
 
@@ -2816,7 +2841,7 @@
         document.getElementById('published-release-details').style.display = 'block';
         document.getElementById('pub-release-id-box').textContent = `Release: ${release.release_id}\nDigest: ${release.manifest_digest}\n${packaging.scope}`;
         document.getElementById('pub-intent-cmd-box').textContent = release.harness_intent_command;
-        setFeedback('publish-feedback', packaging.source_mapping_verified ? 'Contract signed against the bundled fixture playlist. Native verification is separate.' : 'Reference contract signed. Source-to-output equivalence is unverified; this is not a verified native handoff.', packaging.source_mapping_verified ? 'success' : 'warning');
+        setFeedback('publish-feedback', packaging.source_mapping_verified ? 'Exact media contract signed. Install the matching package in the native debug emulator for playback verification.' : 'Reference contract signed. Source-to-output equivalence is unverified; this is not a verified native handoff.', packaging.source_mapping_verified ? 'success' : 'warning');
       } catch(e) {
         setFeedback('publish-feedback', `Publication stopped: ${e.message}`, 'error');
       } finally {

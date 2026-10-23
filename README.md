@@ -25,9 +25,11 @@ python -m pip install -r requirements-demo.txt
 python api_adapter.py
 ```
 
-Open **http://127.0.0.1:8000/operator**. On Windows, `START_FIRESHIELD.bat` starts an already configured environment. Install FFmpeg on PATH for imported-video decoding; the bundled reference-frame cases work without it. Keep hazardous media out of screen recordings.
+Open **http://127.0.0.1:8000/operator**. On Windows, `START_FIRESHIELD.bat` starts an already configured environment. Install FFmpeg on PATH for actual-media screening and the packaged media drill; the raw reference-frame cases work without it. Keep hazardous media out of screen recordings.
 
 Local API authentication is a constrained demo tenant, not production identity management. Incidents are held in memory; catalog/review state is persisted under ignored `runtime_data/`. Restarting the service clears ingested incidents. The local signing seed is generated randomly and stays outside Git.
+
+The catalog's **Build actual media drill** action encodes the owned emergency-scene fixture headlessly, registers the exact HLS segment as a new source revision, and keeps flashing content out of the console preview. Screen that new asset, ground and approve its context, commit the editorial decision, then publish. The package is signed against its actual playlist bytes. Install the matching media and public release file in the debug emulator before playback; the console alone does not perform ADB installation.
 
 ## Verify and build
 
@@ -61,7 +63,7 @@ Its [Android TV recording run](https://github.com/Syedsaadhhh/FireShield/actions
 - Operates inside a participating publisher's player. It cannot inspect or modify Netflix, Prime Video or other protected third-party apps.
 - Screening is an experimental SDR detector. A small synthetic benchmark does not establish general accuracy, clinical efficacy, HDR coverage, broadcast compliance or certification.
 - Zero findings is not a safety certificate. Context and release decisions remain human-reviewed; language-model output never sets hazard boundaries or authorizes playback.
-- The console signs the **actual bundled playlist bytes**. Hazard reference fixtures use an explicitly labelled reference packaging path: source-to-output equivalence is not yet verified. Signing a reference contract does not establish a complete media-to-native release. The benign native fixture and headless screening/reference flow are demonstrated separately.
+- The packaged media drill screens the actual encoded segment and signs its matching playlist. `tools/capture_connected_demo.py` exports that exact media and public verification data to a dedicated native emulator, checks a pre-interval context hold and bypass, and investigates a fresh same-revision caption-loss incident. Its latest execution status is established by the workflow artifact. The original raw-frame catalog fixtures retain a separately labelled reference packaging path; they are not source-to-output proofs.
 - Native recovery evidence establishes player-selection state and controlled fault detection. Rendered caption/audio correctness, every physical Fire TV model, and a production end-to-end release remain separate verification work.
 - Receipt/checkpoint hashes detect changes; they do not authenticate an untrusted device. Sidecar authenticity uses Ed25519 with an independently trusted key. Release builds ignore external debug trust-root overrides.
 - AWS orchestration examples and an optional Bedrock adapter are present. **Live AWS/Bedrock remains unverified and is not needed for this demo.** Offline context extraction reports `model_invoked=false`.

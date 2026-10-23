@@ -44,7 +44,8 @@ data class FireShieldHarnessConfig(
     val revokedKeyIds: Set<String>,
     val preGuardMs: Long,
     val seekTimeoutMs: Long,
-    val presentationMode: String = "standard"
+    val presentationMode: String = "standard",
+    val subtitleUri: String = "asset:///hls/subtitles_en.vtt"
 ) {
     companion object {
         fun fromIntentOrAssets(suppliedIntent: Intent?, assets: AssetManager, allowDebugOverrides: Boolean = false): FireShieldHarnessConfig {
@@ -157,7 +158,9 @@ data class FireShieldHarnessConfig(
                 revokedKeyIds = revokedSet,
                 preGuardMs = preGuardMs,
                 seekTimeoutMs = seekTimeoutMs,
-                presentationMode = provenanceJson.optString("presentation_mode", "standard")
+                presentationMode = provenanceJson.optString("presentation_mode", "standard"),
+                subtitleUri = releaseJson?.optString("subtitle_uri")?.takeIf { it.isNotBlank() }
+                    ?: "asset:///hls/subtitles_en.vtt"
             )
         }
     }
@@ -616,7 +619,7 @@ class MainActivity : Activity() {
         })
 
         // Build MediaItem with explicit subtitle configuration
-        val subtitleConfig = MediaItem.SubtitleConfiguration.Builder(Uri.parse("asset:///hls/subtitles_en.vtt"))
+        val subtitleConfig = MediaItem.SubtitleConfiguration.Builder(Uri.parse(cfg.subtitleUri))
             .setMimeType(MimeTypes.TEXT_VTT)
             .setLanguage("en")
             .setLabel("English CC")
@@ -736,10 +739,28 @@ class MainActivity : Activity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
+        // A diagnostic action must not discard the loaded release configuration.
+        setIntent(Intent(getIntent()).putExtras(intent))
         // Diagnostic controls are enabled only in debuggable builds.
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return
         when (intent.getStringExtra("fireshield.test_action")) {
+            "snapshot" -> {
+                val player = exoPlayer
+                Log.i("FireShieldDemo", JSONObject().apply {
+                    put("asset_revision_id", activeConfig?.session?.assetRevisionId)
+                    put("position_ms", player?.currentPosition)
+                    put("is_playing", player?.isPlaying)
+                    put("surface_blanked", shutterOverlay.visibility == View.VISIBLE)
+                    put("state", gateBridge?.state?.name)
+                    put("captions_selected", player?.let { isSubtitleTrackActuallySelected(it) })
+                    put("status", statusTextView.text.toString())
+                }.toString())
+            }
+            "bypass" -> {
+                if (!isRecoveryInFlight && !isDivergenceLatched) {
+                    gateBridge?.requestViewerBypassSeek(SystemClock.elapsedRealtime())?.let { updateDiagnosticReadout(it) }
+                }
+            }
             "drop_subtitles" -> injectDroppedTrackFault(C.TRACK_TYPE_TEXT)
             "drop_audio" -> injectDroppedTrackFault(C.TRACK_TYPE_AUDIO)
             "cut_drift" -> injectCutDriftFault()
@@ -869,10 +890,12 @@ class MainActivity : Activity() {
             shutterOverlay.visibility = View.VISIBLE
 
             val receipt = RecoveryVerifier.generateIncidentReceipt(
-                fixtureId = "benign_calm_presentation_with_subtitles",
+                fixtureId = if (activeConfig?.mediaUri?.contains("fireshield-demo/") == true)
+                    "packaged_publisher_scene_with_subtitles" else "benign_calm_presentation_with_subtitles",
                 verificationResult = result
             )
             activeIncidentReceipt = receipt
+            statusTextView.text = "Recovery gate: DIVERGED | Playback=PAUSED | Surface=BLANKED"
             val shortDigest = receipt.optString("receipt_digest", "").take(16)
             verificationTextView.setTextColor(Color.RED)
             verificationTextView.text = "DIVERGENCE DETECTED [${result.mismatchFields.joinToString(", ")}]: Fail-Closed Paused & Blanked (Digest: $shortDigest...)"
@@ -883,7 +906,7 @@ class MainActivity : Activity() {
     private fun updateDiagnosticReadout(cmd: PlayerCommand) {
         val bridge = gateBridge
         statusTextView.text = buildString {
-            append("Tenant=${bridge?.session?.tenantId} | State=${cmd.state} | Action=${cmd.action} | ")
+            append("Publisher gate: Tenant=${bridge?.session?.tenantId} | State=${cmd.state} | Action=${cmd.action} | ")
             append("Pos=${cmd.presentationMs}ms | Blank=${cmd.requiresSurfaceBlanking} | ")
             append("Reason=${cmd.reasonCode}")
             if (!cmd.contextNote.isNullOrBlank()) {

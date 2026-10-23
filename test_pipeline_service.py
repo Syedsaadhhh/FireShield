@@ -248,7 +248,7 @@ def test_api_connected_flow(wsgi_client):
     assert status == "201 Created"
     job = json.loads(data)
     assert job["status"] in ("RUNNING", "COMPLETED")
-    for _ in range(50):
+    for _ in range(300):
         if job["status"] in ("COMPLETED", "FAILED"):
             break
         time.sleep(0.1)

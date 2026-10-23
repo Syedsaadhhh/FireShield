@@ -258,3 +258,11 @@ All error responses strictly adhere to:
 | `409 Conflict` | `ApiConflictError` | Duplicate `incident_id` with differing payload digest |
 | `413 Payload Too Large` | `ApiError` | Request body exceeds 64KB limit |
 | `415 Unsupported Media Type` | `ApiError` | Missing or non-`application/json` Content-Type on POST |
+
+## Exact-media demonstration package
+
+`POST /api/v1/demo/package` creates an owned, encoded HLS scene as a new managed catalog asset. Requires FFmpeg. The encoded segment bytes determine its source revision. No screening or approval is reused from the raw-frame reference.
+
+`GET /api/v1/demo/packaging/{asset_id}` returns that asset's exact playlist after checking segment identity. The package uses an app-private native debug path. Install it through `tools/capture_connected_demo.py`; copying an intent command alone does not transfer media.
+
+A dedicated Android TV emulator can run `python tools/capture_connected_demo.py --serial emulator-5554` after the debug APK is installed. This controlled harness supplies the review decision, verifies a blanked pre-interval context hold, bypasses into a calm tail, injects caption loss, and checks the receipt against the same source and playlist. It reports player-selection evidence, not rendered-output certification. Release builds ignore its external debug configuration.

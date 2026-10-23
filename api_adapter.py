@@ -478,10 +478,27 @@ def create_wsgi_app(
                     start_response("200 OK", h_headers)
                     return [html_content]
 
-            # Route 1: Health check
+            # Package owned fixture headlessly, then screen the encoded revision.
+            if path == "/api/v1/demo/package" and method == "POST":
+                from packaged_demo import prepare_package
+                try:
+                    asset = prepare_package(api.pipeline_service, auth.tenant_id)
+                except (ValueError, RuntimeError) as exc:
+                    raise ApiError(str(exc), 409) from exc
+                start_response("201 Created", cors_headers)
+                return [json.dumps(asset.to_dict()).encode()]
+
             if path.startswith("/api/v1/demo/packaging/") and method == "GET":
                 asset_id = path.rsplit("/", 1)[-1]
                 asset = api.pipeline_service.get_asset(asset_id, auth.tenant_id)
+                from packaged_demo import packaging_for_asset
+                try:
+                    actual_package = packaging_for_asset(asset)
+                except ValueError as exc:
+                    raise ApiError(str(exc), 409) from exc
+                if actual_package:
+                    start_response("200 OK", cors_headers)
+                    return [json.dumps(actual_package).encode()]
                 if asset_id == "ast-benign-navy-clip":
                     playlist_name = "benign_variant.m3u8"
                     source_mapping_verified = True

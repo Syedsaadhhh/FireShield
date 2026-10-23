@@ -430,7 +430,7 @@ class LocalPipelineService:
             # 5. Resolve against WORKSPACE_ROOT and verify confinement
             try:
                 target_path = (WORKSPACE_ROOT / normalized).resolve()
-                if not str(target_path).startswith(str(WORKSPACE_ROOT.resolve())):
+                if not target_path.is_relative_to(WORKSPACE_ROOT.resolve()):
                     raise PipelineServiceError("Path escapes workspace confinement", 400)
             except Exception as e:
                 raise PipelineServiceError(f"Invalid source_path: {e}", 400)
@@ -439,6 +439,8 @@ class LocalPipelineService:
                 raise PipelineServiceError(f"Managed source file '{source_path}' does not exist", 404)
             if actual_bytes is None:
                 actual_bytes = target_path.read_bytes()
+            elif hashlib.sha256(actual_bytes).digest() != hashlib.sha256(target_path.read_bytes()).digest():
+                raise PipelineServiceError("Provided bytes do not match the managed source file", 409)
 
         if actual_bytes is None or len(actual_bytes) == 0:
             raise PipelineServiceError("No media bytes provided for asset import", 400)
@@ -591,13 +593,13 @@ class LocalPipelineService:
                     frames, fps=fps, exact_asset_revision_id=asset.asset_revision_id
                 )
             elif "benign" in asset.asset_id.lower():
-                # Standard benign smooth ramp: no hazard findings
-                fixture = ref_fixtures["ref_neg_smooth_ramp"]
-                frames = fixture["frames"]
-                fps = fixture["fps"]
-                return analyze_rgb_frame_sequence(
-                    frames, fps=fps, exact_asset_revision_id=asset.asset_revision_id
-                )
+                # Screen the actual encoded bytes, never a different negative
+                # reference under the real segment's revision identifier.
+                source = WORKSPACE_ROOT / "fireos/app/src/main/assets/hls/benign_seg0.ts"
+                report = analyze_video_file_headless(source)
+                if report.total_frames == 0 or report.asset_revision_id != asset.asset_revision_id:
+                    raise PipelineServiceError("Bundled media identity changed; re-import before screening", 409)
+                return report
             else:
                 raise PipelineServiceError(f"Unknown synthetic fixture type for asset '{asset.asset_id}'", 400)
 
@@ -625,6 +627,8 @@ class LocalPipelineService:
             report = analyze_video_file_headless(video_file, target_width=64, target_height=64)
             if report.total_frames == 0:
                 raise PipelineServiceError("Video decoding yielded 0 frames: corrupted or unsupported media stream", 400)
+            if report.asset_revision_id != asset.asset_revision_id:
+                raise PipelineServiceError("Media changed after import; re-import and review the current revision", 409)
             return report
         except Exception as exc:
             if isinstance(exc, PipelineServiceError):
@@ -872,6 +876,17 @@ class LocalPipelineService:
                 raise PipelineServiceError(
                     f"Asset revision '{asset_revision_id}' has not been screened", 400
                 )
+
+            asset_id = self._asset_rev_to_id.get(key)
+            asset = self._assets.get((tenant_id, asset_id))
+            source = None
+            if asset and asset.source_type == "managed_video" and asset.source_path:
+                source = WORKSPACE_ROOT / asset.source_path
+            elif asset and asset.asset_id == "ast-benign-navy-clip":
+                source = WORKSPACE_ROOT / "fireos/app/src/main/assets/hls/benign_seg0.ts"
+            if source is not None and (not source.is_file() or
+                    "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest() != asset_revision_id):
+                raise PipelineServiceError("Source changed after screening; import and review the current revision", 409)
 
             if report.review_state == "rejected":
                 raise PipelineServiceError(
